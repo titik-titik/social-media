@@ -1,7 +1,3 @@
-.PHONY: build-development build-staging build-production
-.PHONY: start-development start-staging start-production
-.PHONY: stop-development stop-staging stop-production
-
 build-development:
 	docker compose -f ./docker/development/docker-compose.yml  build --no-cache
 

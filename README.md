@@ -1,1 +1,1 @@
-# go-sosmed
+# social-media
