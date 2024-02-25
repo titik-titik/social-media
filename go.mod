@@ -1,4 +1,4 @@
-module go-sosmed
+module social-media
 
 go 1.22.0
 
