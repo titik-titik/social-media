@@ -61,8 +61,8 @@ func CloseRedis() error {
 	return nil
 }
 
-// SetCached stores data in cache with a specific Redis key and expiration time
-func SetCached(redisKey string, data []byte, expirationTime time.Time) error {
+// InsertData stores data in cache with a specific Redis key and expiration time
+func InsertData(redisKey string, data []byte, expirationTime time.Time) error {
 	ctx := context.Background()
 	expirationDuration := time.Until(expirationTime)
 
