@@ -50,3 +50,12 @@ func InitializeRedis(envPath string) *redis.Client {
 	fmt.Printf("Connected to Redis at: %s\n", RedisAddr)
 	return RedisClient
 }
+
+// CloseRedis closes the Redis connection
+func CloseRedis() error {
+	if err := RedisClient.Close(); err != nil {
+		fmt.Println("Error closing Redis client:", err)
+		return err
+	}
+	return nil
+}
