@@ -1,29 +1,23 @@
-# Start from golang base image
-FROM golang:1.22-alpine3.18
+# Start from golang base image.
+FROM golang:1.22-alpine
 
-# Install git.
-# Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache git && apk add --no-cache bash && apk add build-base
+# Install dependencies.
+RUN apk update
+RUN apk add --no-cache git build-base
 
-# Setup folders
-RUN mkdir /app
-WORKDIR /app
+# Setup workdir.
+ENV WORKDIR /app
+WORKDIR $WORKDIR
 
-# Copy the source from the current directory to the working Directory inside the container
+# Copy sources from the host current directory to the workdir inside the container.
 COPY . .
-COPY .env.production ./.env
+COPY ./docker/production/.env ./.env
 
-# Download all the dependencies
-RUN go get -d -v ./...
-
-# Install the package
+# Install the modules.
 RUN go install -v ./...
 
-# Build the Go app
-RUN go build -C cmd/web -o /build
+# Clean all the downloaded modules.
+RUN go clean -modcache
 
-# Expose port 8080 to the outside world
-EXPOSE 8080
-
-# Run the executable
-CMD [ "/build" ]
+# Build the Go app.
+RUN go build -C $WORKDIR/cmd/web -o $WORKDIR/build
