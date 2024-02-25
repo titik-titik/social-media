@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -57,5 +58,18 @@ func CloseRedis() error {
 		fmt.Println("Error closing Redis client:", err)
 		return err
 	}
+	return nil
+}
+
+// SetCached stores data in cache with a specific Redis key and expiration time
+func SetCached(redisKey string, data []byte, expirationTime time.Time) error {
+	ctx := context.Background()
+	expirationDuration := time.Until(expirationTime)
+
+	err := RedisClient.SetEx(ctx, redisKey, data, expirationDuration).Err()
+	if err != nil {
+		return fmt.Errorf("error setting data to cache: %v", err)
+	}
+
 	return nil
 }
