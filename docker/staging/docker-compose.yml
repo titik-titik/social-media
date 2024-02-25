@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  social_media_staging:
+    container_name: social_media_staging
+    environment:
+      - APP_ENV=staging
+    tty: true
+    build:
+      context: ../../
+      dockerfile: docker/staging/Dockerfile
+    ports:
+      - "8001:8080"
+    restart: on-failure
+    networks:
+      - social_media_staging_network
+
+networks:
+  social_media_staging_network:
+    driver: bridge

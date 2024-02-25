@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  social_media_development:
+    container_name: social_media_development
+    environment:
+      - APP_ENV=development
+    tty: true
+    build:
+      context: ../../
+      dockerfile: docker/development/Dockerfile
+    ports:
+      - "8000:8080"
+    restart: on-failure
+    networks:
+      - social_media_development_network
+
+networks:
+  social_media_development_network:
+    driver: bridge
