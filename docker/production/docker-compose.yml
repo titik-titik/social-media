@@ -17,8 +17,6 @@ services:
     command: [ "redis-server", "--requirepass", "${REDIS_ONE_PASSWORD}" ]
   mariadb-one:
     image: mariadb:latest
-    volumes:
-      - ./data/mariadb-one:/var/lib/mysql
     ports:
       - "${MARIADB_ONE_PORT}:3306"
     environment:
