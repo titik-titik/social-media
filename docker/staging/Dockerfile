@@ -30,4 +30,5 @@ ENV WORKDIR /app
 WORKDIR $WORKDIR
 
 # Copy the build from the builder image.
+COPY --from=builder $WORKDIR/.env ./.env
 COPY --from=builder $WORKDIR/build ./build

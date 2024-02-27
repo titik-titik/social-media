@@ -19,11 +19,13 @@ services:
     image: mariadb:latest
     ports:
       - "${MARIADB_ONE_PORT}:3306"
+    volumes:
+      - "../../migration:/docker-entrypoint-initdb.d"
     environment:
-      MARIADB_DATABASE: ${MARIADB_ONE_DATABASE}
       MARIADB_USER: ${MARIADB_ONE_USER}
       MARIADB_PASSWORD: ${MARIADB_ONE_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${MARIADB_ONE_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_ONE_DATABASE}
   phpmyadmin-one:
     image: phpmyadmin/phpmyadmin:latest
     ports:
