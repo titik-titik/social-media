@@ -21,6 +21,7 @@ func NewUserUseCase(
 
 func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.User] {
 	foundUser := userUseCase.UserRepository.FindOneById(id)
+
 	return &model.Result[*entity.User]{
 		Code:    200,
 		Message: "UserUserCase FindOneById succeed.",
@@ -46,7 +47,7 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*enti
 	}
 }
 
-func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email string, password string) *model.Result[*entity.User] {
+func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string) *model.Result[*entity.User] {
 	foundUser := userUseCase.UserRepository.FindOneByEmailAndPassword(email, password)
 	return &model.Result[*entity.User]{
 		Code:    200,
@@ -55,7 +56,7 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email string, password
 	}
 }
 
-func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username string, password string) *model.Result[*entity.User] {
+func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password string) *model.Result[*entity.User] {
 	foundUser := userUseCase.UserRepository.FindOneByUsernameAndPassword(username, password)
 	return &model.Result[*entity.User]{
 		Code:    200,

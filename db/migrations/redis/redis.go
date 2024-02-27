@@ -16,7 +16,7 @@ var RedisClient *redis.Client // RedisClient is the instance of the Redis client
 var RedisAddr string          // Variable to store the Redis address
 var RedisKey string           // RedisKey is the key for storing user data in cache
 
-// InitializeRedis sets up the connection to Redis
+// InitializeRedis sets up the connection to Redis.
 func InitializeRedis(envPath string) *redis.Client {
 	if err := godotenv.Load(envPath); err != nil { // Using relative path
 		log.Fatalf("Error loading .env file in caching: %v", err)
@@ -52,7 +52,7 @@ func InitializeRedis(envPath string) *redis.Client {
 	return RedisClient
 }
 
-// CloseRedis closes the Redis connection
+// CloseRedis closes the Redis connection.
 func CloseRedis() error {
 	if err := RedisClient.Close(); err != nil {
 		fmt.Println("Error closing Redis client:", err)
@@ -61,7 +61,7 @@ func CloseRedis() error {
 	return nil
 }
 
-// InsertData stores data in cache with a specific Redis key and expiration time
+// InsertData stores data in cache with a specific Redis key and expiration time.
 func InsertData(redisKey string, data []byte, expirationTime time.Time) error {
 	ctx := context.Background()
 	expirationDuration := time.Until(expirationTime)
