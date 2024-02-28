@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"social-media/internal/entity"
 	"social-media/internal/model"
-	"social-media/internal/model/request/user"
+	"social-media/internal/model/request"
 	"social-media/internal/use_case"
 
 	"github.com/gorilla/mux"
@@ -90,7 +90,7 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 func (userController *UserController) PatchOneById(writer http.ResponseWriter, reader *http.Request) {
 	vars := mux.Vars(reader)
 	id := vars["id"]
-	request := &user.PatchOneById{}
+	request := &request.UserPatchOneByIdRequest{}
 	decodeErr := json.NewDecoder(reader.Body).Decode(request)
 	if decodeErr != nil {
 		panic(decodeErr)

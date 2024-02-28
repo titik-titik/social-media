@@ -1,12 +1,14 @@
 package use_case
 
 import (
-	"github.com/guregu/null"
 	"social-media/internal/entity"
 	"social-media/internal/model"
-	"social-media/internal/model/request/user"
+	"social-media/internal/model/request"
 	"social-media/internal/repository"
 	"time"
+
+	"github.com/guregu/null"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserUseCase struct {
@@ -136,34 +138,55 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 	if patchedUser == nil {
 		return &model.Result[*entity.User]{
 			Code:    500,
-			Message: "UserUserCase PatchOneById is failed, user is not patched.",
+			Message: "UserUserCase UserPatchOneByIdRequest is failed, user is not patched.",
 			Data:    nil,
 		}
 	}
 
 	return &model.Result[*entity.User]{
 		Code:    200,
-		Message: "UserUserCase PatchOneById is succeed.",
+		Message: "UserUserCase UserPatchOneByIdRequest is succeed.",
 		Data:    patchedUser,
 	}
 }
 
-func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *user.PatchOneById) *model.Result[*entity.User] {
+func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *request.UserPatchOneByIdRequest) *model.Result[*entity.User] {
 	foundUserResult := userUseCase.FindOneById(id)
 	if foundUserResult.Code != 200 || foundUserResult.Data == nil {
 		return &model.Result[*entity.User]{
-			Code:    404,
-			Message: "UserUserCase PatchOneByIdFromRequest is failed, user is not found by id.",
+			Code:    500,
+			Message: "UserUserCase PatchOneByIdFromRequest is failed, " + foundUserResult.Message,
 			Data:    nil,
 		}
 	}
 
-	foundUserResult.Data.Name = request.Name
-	foundUserResult.Data.Username = request.Username
-	foundUserResult.Data.Email = request.Email
-	foundUserResult.Data.Password = request.Password
-	foundUserResult.Data.AvatarUrl = request.AvatarUrl
-	foundUserResult.Data.Bio = request.Bio
+	if request.Name.Valid {
+		foundUserResult.Data.Name = request.Name
+	}
+	if request.Email.Valid {
+		foundUserResult.Data.Email = request.Email
+	}
+	if request.Username.Valid {
+		foundUserResult.Data.Username = request.Username
+	}
+	hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(request.Password.String), bcrypt.DefaultCost)
+	if hashedPasswordErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    500,
+			Message: "UserUserCase PatchOneByIdFromRequest is failed, password hashing is failed.",
+			Data:    nil,
+		}
+	}
+	if request.Password.Valid {
+		foundUserResult.Data.Password = null.NewString(string(hashedPassword), true)
+	}
+	if request.AvatarUrl.Valid {
+		foundUserResult.Data.AvatarUrl = request.AvatarUrl
+	}
+	if request.Bio.Valid {
+		foundUserResult.Data.Bio = request.Bio
+	}
+
 	foundUserResult.Data.UpdatedAt = null.NewTime(time.Now().UTC(), true)
 
 	patchedUserResult := userUseCase.PatchOneById(id, foundUserResult.Data)
@@ -191,7 +214,6 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.U
 			Message: "UserUserCase DeleteOneById is failed, user is not deleted.",
 			Data:    nil,
 		}
-
 	}
 
 	return &model.Result[*entity.User]{

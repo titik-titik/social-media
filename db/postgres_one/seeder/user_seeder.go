@@ -26,10 +26,6 @@ func (userSeeder *UserSeeder) Up() {
 
 func (userSeeder *UserSeeder) Down() {
 	for _, user := range userSeeder.UserMock.Data {
-		id, valueErr := user.Id.Value()
-		if valueErr != nil {
-			panic(valueErr)
-		}
-		userSeeder.UserRepository.DeleteOneById(id.(string))
+		userSeeder.UserRepository.DeleteOneById(user.Id.String)
 	}
 }
