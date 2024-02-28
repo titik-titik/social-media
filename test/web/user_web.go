@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/guregu/null"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"social-media/internal/entity"
 	"social-media/internal/model"
-	"social-media/internal/model/request/user"
+	"social-media/internal/model/request"
 	"testing"
+
+	"github.com/guregu/null"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserWeb struct {
@@ -30,34 +32,33 @@ func (userWeb *UserWeb) Start() {
 	userWeb.Test.Run("UserWeb FindOneById", userWeb.FindOneById)
 	userWeb.Test.Run("UserWeb FindOneByEmail", userWeb.FindOneByEmail)
 	userWeb.Test.Run("UserWeb FindOneByUsername", userWeb.FindOneByUsername)
-	userWeb.Test.Run("UserWeb PatchOneById", userWeb.PatchOneById)
+	userWeb.Test.Run("UserWeb UserPatchOneByIdRequest", userWeb.PatchOneById)
 	userWeb.Test.Run("UserWeb DeleteOneById", userWeb.DeleteOneById)
 }
 
 func (userWeb *UserWeb) FindOneById(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
-	allSeeder := testWeb.GetAllSeeder()
-	allSeeder.Up()
-	t.Cleanup(allSeeder.Down)
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := allSeeder.UserSeeder.UserMock.Data[0]
-	idValue, idValueErr := selectedUserData.Id.Value()
-	if idValueErr != nil {
-		t.Error(idValueErr)
-	}
+	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 
-	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, idValue)
-	request, newRequestErr := http.NewRequest(http.MethodGet, url, nil)
+	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
+	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Error(newRequestErr)
+		return
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if newRequestErr != nil {
 		t.Error(newRequestErr)
+		return
 	}
 	if doErr != nil {
 		t.Error(doErr)
+		return
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -67,32 +68,36 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
+		return
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)
 }
 
 func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
-	allSeeder := testWeb.GetAllSeeder()
-	allSeeder.Up()
-	t.Cleanup(allSeeder.Down)
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := allSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 	email, valueErr := selectedUserData.Email.Value()
 	if valueErr != nil {
 		t.Error(valueErr)
+		return
 	}
 
 	url := fmt.Sprintf("%s/%s?email=%s", testWeb.Server.URL, userWeb.Path, email)
-	request, newRequestErr := http.NewRequest(http.MethodGet, url, nil)
+	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Error(newRequestErr)
+		return
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Error(doErr)
+		return
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -102,32 +107,36 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
+		return
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)
 }
 
 func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
-	allSeeder := testWeb.GetAllSeeder()
-	allSeeder.Up()
-	t.Cleanup(allSeeder.Down)
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := allSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 	username, valueErr := selectedUserData.Username.Value()
 	if valueErr != nil {
 		t.Error(valueErr)
+		return
 	}
 
 	url := fmt.Sprintf("%s/%s?username=%s", testWeb.Server.URL, userWeb.Path, username)
-	request, newRequestErr := http.NewRequest(http.MethodGet, url, nil)
+	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Error(newRequestErr)
+		return
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Error(doErr)
+		return
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -137,70 +146,46 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
+		return
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)
 }
 
 func (userWeb *UserWeb) PatchOneById(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
-	allSeeder := testWeb.GetAllSeeder()
-	allSeeder.Up()
-	t.Cleanup(allSeeder.Down)
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := allSeeder.UserSeeder.UserMock.Data[0]
-	idValue, idValueErr := selectedUserData.Id.Value()
-	if idValueErr != nil {
-		t.Error(idValueErr)
-	}
+	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 
-	bodyRequest := &user.PatchOneById{}
-	nameValue, nameValueErr := selectedUserData.Name.Value()
-	if nameValueErr != nil {
-		t.Error(nameValueErr)
-	}
-	bodyRequest.Name = null.NewString(nameValue.(string)+"patched", true)
-	emailValue, emailValueErr := selectedUserData.Email.Value()
-	if emailValueErr != nil {
-		t.Error(emailValueErr)
-	}
-	bodyRequest.Email = null.NewString(emailValue.(string)+"patched", true)
-	usernameValue, usernameValueErr := selectedUserData.Username.Value()
-	if usernameValueErr != nil {
-		t.Error(usernameValueErr)
-	}
-	bodyRequest.Username = null.NewString(usernameValue.(string)+"patched", true)
-	passwordValue, passwordValueErr := selectedUserData.Password.Value()
-	if passwordValueErr != nil {
-		t.Error(passwordValueErr)
-	}
-	bodyRequest.Password = null.NewString(passwordValue.(string)+"patched", true)
-	avatarUrlValue, avatarUrlValueErr := selectedUserData.AvatarUrl.Value()
-	if avatarUrlValueErr != nil {
-		t.Error(avatarUrlValueErr)
-	}
-	bodyRequest.AvatarUrl = null.NewString(avatarUrlValue.(string)+"patched", true)
-	bioValue, bioValueErr := selectedUserData.Bio.Value()
-	if bioValueErr != nil {
-		t.Error(bioValueErr)
-	}
-	bodyRequest.Bio = null.NewString(bioValue.(string)+"patched", true)
+	bodyRequest := &request.UserPatchOneByIdRequest{}
+	bodyRequest.Name = null.NewString(selectedUserData.Name.String+"patched", true)
+	bodyRequest.Email = null.NewString(selectedUserData.Email.String+"patched", true)
+	bodyRequest.Username = null.NewString(selectedUserData.Username.String+"patched", true)
+	bodyRequest.Password = null.NewString(selectedUserData.Password.String+"patched", true)
+	bodyRequest.AvatarUrl = null.NewString(selectedUserData.AvatarUrl.String+"patched", true)
+	bodyRequest.Bio = null.NewString(selectedUserData.Bio.String+"patched", true)
 
 	bodyRequestJsonByte, marshalErr := json.Marshal(bodyRequest)
 	if marshalErr != nil {
 		t.Error(marshalErr)
+		return
 	}
 	bodyRequestBuffer := bytes.NewBuffer(bodyRequestJsonByte)
 
-	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, idValue)
+	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodPatch, url, bodyRequestBuffer)
 	if newRequestErr != nil {
 		t.Error(newRequestErr)
+		return
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Error(doErr)
+		return
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -210,37 +195,37 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
+		return
 	}
 
+	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
 	assert.Equal(t, bodyRequest.Name, bodyResponse.Data.Name)
 	assert.Equal(t, bodyRequest.Email, bodyResponse.Data.Email)
 	assert.Equal(t, bodyRequest.Username, bodyResponse.Data.Username)
-	assert.Equal(t, bodyRequest.Password, bodyResponse.Data.Password)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(bodyRequest.Password.String)))
 	assert.Equal(t, bodyRequest.AvatarUrl, bodyResponse.Data.AvatarUrl)
 	assert.Equal(t, bodyRequest.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
-	// t.Parallel()
+	t.Parallel()
 
-	allSeeder := testWeb.GetAllSeeder()
-	allSeeder.Up()
-	t.Cleanup(allSeeder.Down)
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := allSeeder.UserSeeder.UserMock.Data[0]
-	idValue, idValueErr := selectedUserData.Id.Value()
-	if idValueErr != nil {
-		t.Error(idValueErr)
-	}
+	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 
-	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, idValue)
-	request, newRequestErr := http.NewRequest(http.MethodDelete, url, nil)
+	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
+	request, newRequestErr := http.NewRequest(http.MethodDelete, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Error(newRequestErr)
+		return
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Error(doErr)
+		return
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -250,6 +235,7 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
+		return
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)

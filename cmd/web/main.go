@@ -23,6 +23,7 @@ func main() {
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 
+<<<<<<< HEAD
 	searchRepository := repository.NewSearchRepository(databaseConfig)
 	userRepository := repository.NewUserRepository(databaseConfig)
 
@@ -30,10 +31,27 @@ func main() {
 	searchUseCase := use_case.NewSearchUseCase(searchRepository)
 
 	userController := http_delivery.NewUserController(userUseCase, searchUseCase)
+=======
+	userRepository := repository.NewUserRepository(databaseConfig)
+	repositoryConfig := config.NewRepositoryConfig(
+		userRepository,
+	)
+
+	userUseCase := use_case.NewUserUseCase(repositoryConfig)
+	useCaseConfig := config.NewUseCaseConfig(
+		userUseCase,
+	)
+
+	userController := http_delivery.NewUserController(useCaseConfig)
+	controllerConfig := config.NewControllerConfig(
+		userController,
+	)
+>>>>>>> 558e4ba51ee27b0b0fb2cb0334760a582a7e6f35
 
 	router := mux.NewRouter()
-	userRoute := route.NewUserRoute(router, userController)
+	userRoute := route.NewUserRoute(router, controllerConfig)
 	rootRoute := route.NewRootRoute(
+		router,
 		userRoute,
 	)
 
@@ -44,7 +62,7 @@ func main() {
 		envConfig.App.Host,
 		envConfig.App.Port,
 	)
-	listenAndServeErr := http.ListenAndServe(address, router)
+	listenAndServeErr := http.ListenAndServe(address, rootRoute.Router)
 	if listenAndServeErr != nil {
 		panic(listenAndServeErr)
 	}

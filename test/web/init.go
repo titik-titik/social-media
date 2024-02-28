@@ -2,23 +2,22 @@ package web
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"net/http/httptest"
+	seeder "social-media/db/postgres_one/seeder"
 	"social-media/internal/config"
 	http_delivery "social-media/internal/delivery/http"
 	"social-media/internal/delivery/http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
-	"social-media/seeder"
-)
 
-var testWeb *TestWeb
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+)
 
 type TestWeb struct {
 	Server         *httptest.Server
-	UserWeb        *UserWeb
 	UserRepository *repository.UserRepository
+	AllSeeder      *seeder.AllSeeder
 }
 
 func NewTestWeb() *TestWeb {
@@ -29,17 +28,21 @@ func NewTestWeb() *TestWeb {
 
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
+
 	userRepository := repository.NewUserRepository(databaseConfig)
 	userUseCase := use_case.NewUserUseCase(userRepository)
+
 	userController := http_delivery.NewUserController(userUseCase)
 
 	router := mux.NewRouter()
 	userRoute := route.NewUserRoute(router, userController)
 	rootRoute := route.NewRootRoute(
+		router,
 		userRoute,
 	)
 	rootRoute.Register()
-	server := httptest.NewServer(router)
+
+	server := httptest.NewServer(rootRoute.Router)
 
 	testWeb := &TestWeb{
 		Server:         server,
@@ -51,10 +54,14 @@ func NewTestWeb() *TestWeb {
 
 func (web *TestWeb) GetAllSeeder() *seeder.AllSeeder {
 	userSeeder := seeder.NewUserSeeder(web.UserRepository)
-	allSeeder := seeder.NewAllSeeder(userSeeder)
-	return allSeeder
+	seederConfig := seeder.NewAllSeeder(
+		userSeeder,
+	)
+	return seederConfig
 }
 
-func init() {
-	testWeb = NewTestWeb()
+func GetTestWeb() *TestWeb {
+	testWeb := NewTestWeb()
+	testWeb.AllSeeder = testWeb.GetAllSeeder()
+	return testWeb
 }
