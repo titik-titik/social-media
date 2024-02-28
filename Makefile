@@ -1,5 +1,5 @@
 build-development:
-	docker compose -f ./docker/development/docker-compose.yml  build --no-cache
+	docker compose -f ./docker/development/docker-compose.yml build --no-cache
 
 start-development:
 	docker compose -f ./docker/development/docker-compose.yml up -d
@@ -24,4 +24,3 @@ start-production:
 
 stop-production:
 	docker compose -f ./docker/production/docker-compose.yml down
-
