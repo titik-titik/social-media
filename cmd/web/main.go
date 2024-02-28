@@ -22,15 +22,21 @@ func main() {
 
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
+
+	searchRepository := repository.NewSearchRepository(databaseConfig)
 	userRepository := repository.NewUserRepository(databaseConfig)
+
 	userUseCase := use_case.NewUserUseCase(userRepository)
-	userController := http_delivery.NewUserController(userUseCase)
+	searchUseCase := use_case.NewSearchUseCase(searchRepository)
+
+	userController := http_delivery.NewUserController(userUseCase, searchUseCase)
 
 	router := mux.NewRouter()
 	userRoute := route.NewUserRoute(router, userController)
 	rootRoute := route.NewRootRoute(
 		userRoute,
 	)
+
 	rootRoute.Register()
 
 	address := fmt.Sprintf(

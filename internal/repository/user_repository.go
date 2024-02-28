@@ -38,6 +38,8 @@ func rowMapper(rows *sql.Rows) *entity.User {
 	return foundUser
 }
 
+
+
 func (userRepository *UserRepository) FindOneById(id string) *entity.User {
 	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user WHERE id = ? LIMIT 1", id,
