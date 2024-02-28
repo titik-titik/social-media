@@ -13,6 +13,8 @@ type UserUseCase struct {
 	UserRepository *repository.UserRepository
 }
 
+
+
 func NewUserUseCase(
 	userRepository *repository.UserRepository,
 ) *UserUseCase {
