@@ -1,5 +1,5 @@
 # Start from golang base image.
-FROM golang:1.22-alpine
+FROM golang:1.22-alpine as builder
 
 # Install dependencies.
 RUN apk update
@@ -21,3 +21,14 @@ RUN go clean -modcache
 
 # Build the Go app.
 RUN go build -C $WORKDIR/cmd/web -o $WORKDIR/build
+
+# Copy the build to the final image.
+FROM alpine:latest
+
+# Setup workdir.
+ENV WORKDIR /app
+WORKDIR $WORKDIR
+
+# Copy the build from the builder image.
+COPY --from=builder $WORKDIR/.env ./.env
+COPY --from=builder $WORKDIR/build ./build

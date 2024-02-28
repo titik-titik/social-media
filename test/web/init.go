@@ -1,20 +1,27 @@
-package main
+package web
 
 import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"net/http"
+	"net/http/httptest"
 	"social-media/internal/config"
 	http_delivery "social-media/internal/delivery/http"
 	"social-media/internal/delivery/http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
+	"social-media/seeder"
 )
 
-func main() {
-	fmt.Println("Web started.")
+var testWeb *TestWeb
 
+type TestWeb struct {
+	Server         *httptest.Server
+	UserWeb        *UserWeb
+	UserRepository *repository.UserRepository
+}
+
+func NewTestWeb() *TestWeb {
 	errEnvLoad := godotenv.Load()
 	if errEnvLoad != nil {
 		panic(fmt.Errorf("error loading .env file: %w", errEnvLoad))
@@ -32,16 +39,22 @@ func main() {
 		userRoute,
 	)
 	rootRoute.Register()
+	server := httptest.NewServer(router)
 
-	address := fmt.Sprintf(
-		"%s:%s",
-		envConfig.App.Host,
-		envConfig.App.Port,
-	)
-	listenAndServeErr := http.ListenAndServe(address, router)
-	if listenAndServeErr != nil {
-		panic(listenAndServeErr)
+	testWeb := &TestWeb{
+		Server:         server,
+		UserRepository: userRepository,
 	}
 
-	fmt.Println("Web finished.")
+	return testWeb
+}
+
+func (web *TestWeb) GetAllSeeder() *seeder.AllSeeder {
+	userSeeder := seeder.NewUserSeeder(web.UserRepository)
+	allSeeder := seeder.NewAllSeeder(userSeeder)
+	return allSeeder
+}
+
+func init() {
+	testWeb = NewTestWeb()
 }
