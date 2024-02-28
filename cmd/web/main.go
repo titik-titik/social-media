@@ -22,13 +22,26 @@ func main() {
 
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
+
 	userRepository := repository.NewUserRepository(databaseConfig)
-	userUseCase := use_case.NewUserUseCase(userRepository)
-	userController := http_delivery.NewUserController(userUseCase)
+	repositoryConfig := config.NewRepositoryConfig(
+		userRepository,
+	)
+
+	userUseCase := use_case.NewUserUseCase(repositoryConfig)
+	useCaseConfig := config.NewUseCaseConfig(
+		userUseCase,
+	)
+
+	userController := http_delivery.NewUserController(useCaseConfig)
+	controllerConfig := config.NewControllerConfig(
+		userController,
+	)
 
 	router := mux.NewRouter()
-	userRoute := route.NewUserRoute(router, userController)
+	userRoute := route.NewUserRoute(router, controllerConfig)
 	rootRoute := route.NewRootRoute(
+		router,
 		userRoute,
 	)
 	rootRoute.Register()
@@ -38,7 +51,7 @@ func main() {
 		envConfig.App.Host,
 		envConfig.App.Port,
 	)
-	listenAndServeErr := http.ListenAndServe(address, router)
+	listenAndServeErr := http.ListenAndServe(address, rootRoute.Router)
 	if listenAndServeErr != nil {
 		panic(listenAndServeErr)
 	}

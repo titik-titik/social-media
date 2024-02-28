@@ -1,6 +1,8 @@
 package tool
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 func DeepCopy[T any](data T) T {
 	jsonByte, marshallErr := json.Marshal(data)

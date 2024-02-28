@@ -7,89 +7,134 @@ import (
 )
 
 type UserRepository struct {
-	Database *config.DatabaseConfig
+	DatabaseConfig *config.DatabaseConfig
 }
 
-func NewUserRepository(database *config.DatabaseConfig) *UserRepository {
+func NewUserRepository(databaseConfig *config.DatabaseConfig) *UserRepository {
 	userRepository := &UserRepository{
-		Database: database,
+		DatabaseConfig: databaseConfig,
 	}
 	return userRepository
 }
 
-func rowMapper(rows *sql.Rows) *entity.User {
-	foundUser := &entity.User{}
-	scanErr := rows.Scan(
-		&foundUser.Id,
-		&foundUser.Name,
-		&foundUser.Username,
-		&foundUser.Email,
-		&foundUser.Password,
-		&foundUser.AvatarUrl,
-		&foundUser.Bio,
-		&foundUser.IsVerified,
-		&foundUser.CreatedAt,
-		&foundUser.UpdatedAt,
-		&foundUser.DeletedAt,
-	)
-	if scanErr != nil {
-		panic(scanErr)
+func deserializeRows(rows *sql.Rows) []*entity.User {
+	var foundUsers []*entity.User
+	for rows.Next() {
+		foundUser := &entity.User{}
+		scanErr := rows.Scan(
+			&foundUser.Id,
+			&foundUser.Name,
+			&foundUser.Username,
+			&foundUser.Email,
+			&foundUser.Password,
+			&foundUser.AvatarUrl,
+			&foundUser.Bio,
+			&foundUser.IsVerified,
+			&foundUser.CreatedAt,
+			&foundUser.UpdatedAt,
+			&foundUser.DeletedAt,
+		)
+		if scanErr != nil {
+			panic(scanErr)
+		}
+
+		foundUser.CreatedAt.Time = foundUser.CreatedAt.Time.UTC()
+		foundUser.UpdatedAt.Time = foundUser.UpdatedAt.Time.UTC()
+		foundUser.DeletedAt.Time = foundUser.DeletedAt.Time.UTC()
+		foundUsers = append(foundUsers, foundUser)
 	}
-	return foundUser
+	return foundUsers
 }
 
 func (userRepository *UserRepository) FindOneById(id string) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user WHERE id = ? LIMIT 1", id,
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE id=$1 LIMIT 1;",
+		id,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
 
-	var foundUser *entity.User = nil
-	for rows.Next() {
-		foundUser = rowMapper(rows)
+	foundUsers := deserializeRows(rows)
+	if len(foundUsers) == 0 {
+		return nil
 	}
-	return foundUser
+
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return foundUsers[0]
 }
 
 func (userRepository *UserRepository) FindOneByUsername(username string) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user WHERE username = ? LIMIT 1",
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 LIMIT 1;",
 		username,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
 
-	var foundUser *entity.User = nil
-	for rows.Next() {
-		foundUser = rowMapper(rows)
+	foundUsers := deserializeRows(rows)
+	if len(foundUsers) == 0 {
+		return nil
 	}
 
-	return foundUser
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return foundUsers[0]
 }
 
 func (userRepository *UserRepository) FindOneByEmail(email string) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user WHERE email = ? LIMIT 1",
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 LIMIT 1;",
 		email,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
 
-	var foundUser *entity.User = nil
-	for rows.Next() {
-		foundUser = rowMapper(rows)
+	foundUsers := deserializeRows(rows)
+	if len(foundUsers) == 0 {
+		return nil
 	}
 
-	return foundUser
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return foundUsers[0]
 }
 
 func (userRepository *UserRepository) FindOneByEmailAndPassword(email string, password string) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user WHERE email = ? AND password = ? LIMIT 1",
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 AND password=$2 LIMIT 1;",
 		email,
 		password,
 	)
@@ -97,17 +142,27 @@ func (userRepository *UserRepository) FindOneByEmailAndPassword(email string, pa
 		panic(queryErr)
 	}
 
-	var foundUser *entity.User = nil
-	for rows.Next() {
-		foundUser = rowMapper(rows)
+	foundUsers := deserializeRows(rows)
+	if len(foundUsers) == 0 {
+		return nil
 	}
 
-	return foundUser
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return foundUsers[0]
 }
 
 func (userRepository *UserRepository) FindOneByUsernameAndPassword(username string, password string) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user WHERE username = ? AND password = ? LIMIT 1",
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 AND password=$2 LIMIT 1;",
 		username,
 		password,
 	)
@@ -115,17 +170,27 @@ func (userRepository *UserRepository) FindOneByUsernameAndPassword(username stri
 		panic(queryErr)
 	}
 
-	var foundUser *entity.User = nil
-	for rows.Next() {
-		foundUser = rowMapper(rows)
+	foundUsers := deserializeRows(rows)
+	if len(foundUsers) == 0 {
+		return nil
 	}
 
-	return foundUser
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return foundUsers[0]
 }
 
 func (userRepository *UserRepository) CreateOne(toCreateUser *entity.User) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"INSERT INTO user (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at",
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	rows, queryErr := begin.Query(
+		"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at;",
 		toCreateUser.Id,
 		toCreateUser.Name,
 		toCreateUser.Username,
@@ -142,16 +207,40 @@ func (userRepository *UserRepository) CreateOne(toCreateUser *entity.User) *enti
 		panic(queryErr)
 	}
 
-	var createdUser *entity.User = nil
-	for rows.Next() {
-		createdUser = rowMapper(rows)
+	createdUsers := deserializeRows(rows)
+	if len(createdUsers) == 0 {
+		return nil
 	}
 
-	return createdUser
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return createdUsers[0]
 }
 
 func (userRepository *UserRepository) PatchOneById(id string, toPatchUser *entity.User) *entity.User {
-	foundUser := userRepository.FindOneById(id)
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	foundRows, foundRowsErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE id=$1 LIMIT 1;",
+		id,
+	)
+	if foundRowsErr != nil {
+		panic(foundRowsErr)
+	}
+
+	foundUsers := deserializeRows(foundRows)
+	if len(foundUsers) == 0 {
+		return nil
+	}
+
+	foundUser := foundUsers[0]
+	foundUser.Id = toPatchUser.Id
 	foundUser.Name = toPatchUser.Name
 	foundUser.Username = toPatchUser.Username
 	foundUser.Email = toPatchUser.Email
@@ -163,8 +252,9 @@ func (userRepository *UserRepository) PatchOneById(id string, toPatchUser *entit
 	foundUser.UpdatedAt = toPatchUser.UpdatedAt
 	foundUser.DeletedAt = toPatchUser.DeletedAt
 
-	_, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"UPDATE user SET name = ?, username = ?, email = ?, password = ?, avatar_url = ?, bio = ?, is_verified = ?, created_at = ?, updated_at = ?, deleted_at = ? WHERE id = ?",
+	_, queryErr := begin.Query(
+		"UPDATE \"user\" SET id=$1, name=$2, username=$3, email=$4, password=$5, avatar_url=$6, bio=$7, is_verified=$8, created_at=$9, updated_at=$10, deleted_at=$11 WHERE id = $12;",
+		foundUser.Id,
 		foundUser.Name,
 		foundUser.Username,
 		foundUser.Email,
@@ -181,22 +271,45 @@ func (userRepository *UserRepository) PatchOneById(id string, toPatchUser *entit
 		panic(queryErr)
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
 	return foundUser
 }
 
 func (userRepository *UserRepository) DeleteOneById(id string) *entity.User {
-	rows, queryErr := userRepository.Database.MariaDbOneDatabase.Db.Query(
-		"DELETE FROM user WHERE id = ? RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at",
+	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	foundRows, foundRowsErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE id=$1 LIMIT 1;",
+		id,
+	)
+	if foundRowsErr != nil {
+		panic(foundRowsErr)
+	}
+
+	foundUsers := deserializeRows(foundRows)
+	if len(foundUsers) == 0 {
+		return nil
+	}
+
+	_, queryErr := begin.Query(
+		"DELETE FROM \"user\" WHERE id=$1 RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at;",
 		id,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
 
-	var deletedUser *entity.User = nil
-	for rows.Next() {
-		deletedUser = rowMapper(rows)
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
 	}
 
-	return deletedUser
+	return foundUsers[0]
 }

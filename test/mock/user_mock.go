@@ -1,10 +1,11 @@
 package mock
 
 import (
-	"github.com/google/uuid"
-	"github.com/guregu/null"
 	"social-media/internal/entity"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/guregu/null"
 )
 
 type UserMock struct {

@@ -1,8 +1,8 @@
-package user
+package request
 
 import "github.com/guregu/null"
 
-type PatchOneById struct {
+type UserPatchOneByIdRequest struct {
 	Name      null.String `json:"name"`
 	Username  null.String `json:"username"`
 	Email     null.String `json:"email"`
