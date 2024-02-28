@@ -7,12 +7,12 @@ type AppEnv struct {
 	Port string
 }
 
-type MariadbOneEnv struct {
+type PostgresOneEnv struct {
 	Host     string
 	Port     string
-	Database string
 	User     string
 	Password string
+	Database string
 }
 
 type RedisOneEnv struct {
@@ -22,9 +22,9 @@ type RedisOneEnv struct {
 }
 
 type EnvConfig struct {
-	App        *AppEnv
-	MariadbOne *MariadbOneEnv
-	RedisOne   *RedisOneEnv
+	App         *AppEnv
+	PostgresOne *PostgresOneEnv
+	RedisOne    *RedisOneEnv
 }
 
 func NewEnvConfig() *EnvConfig {
@@ -33,12 +33,12 @@ func NewEnvConfig() *EnvConfig {
 			Host: os.Getenv("APP_HOST"),
 			Port: os.Getenv("APP_PORT"),
 		},
-		MariadbOne: &MariadbOneEnv{
-			Host:     os.Getenv("MARIADB_ONE_HOST"),
-			Port:     os.Getenv("MARIADB_ONE_PORT"),
-			Database: os.Getenv("MARIADB_ONE_DATABASE"),
-			User:     os.Getenv("MARIADB_ONE_USER"),
-			Password: os.Getenv("MARIADB_ONE_PASSWORD"),
+		PostgresOne: &PostgresOneEnv{
+			Host:     os.Getenv("POSTGRES_ONE_HOST"),
+			Port:     os.Getenv("POSTGRES_ONE_PORT"),
+			User:     os.Getenv("POSTGRES_ONE_USER"),
+			Password: os.Getenv("POSTGRES_ONE_PASSWORD"),
+			Database: os.Getenv("POSTGRES_ONE_DATABASE"),
 		},
 		RedisOne: &RedisOneEnv{
 			Host:     os.Getenv("REDIS_ONE_HOST"),

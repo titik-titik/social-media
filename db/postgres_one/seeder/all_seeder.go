@@ -1,6 +1,8 @@
 package seeder
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type AllSeeder struct {
 	UserSeeder *UserSeeder

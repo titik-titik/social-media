@@ -4,38 +4,41 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type DatabaseConfig struct {
-	MariaDbOneDatabase *MariaDbOneDatabase
+	PostgresOneDatabase *PostgresOneDatabase
 }
 
-type MariaDbOneDatabase struct {
-	Db *sql.DB
+type PostgresOneDatabase struct {
+	Connection *sql.DB
 }
 
 func NewDatabaseConfig(envConfig *EnvConfig) *DatabaseConfig {
 	databaseConfig := &DatabaseConfig{
-		MariaDbOneDatabase: NewMariaDbOneDatabase(envConfig),
+		PostgresOneDatabase: NewPostgresOneDatabase(envConfig),
 	}
 	return databaseConfig
 }
 
-func NewMariaDbOneDatabase(envConfig *EnvConfig) *MariaDbOneDatabase {
+func NewPostgresOneDatabase(envConfig *EnvConfig) *PostgresOneDatabase {
 	url := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		envConfig.MariadbOne.User,
-		envConfig.MariadbOne.Password,
-		envConfig.MariadbOne.Host,
-		envConfig.MariadbOne.Port,
-		envConfig.MariadbOne.Database,
+		"postgres://%s:%s@%s:%s/%s",
+		envConfig.PostgresOne.User,
+		envConfig.PostgresOne.Password,
+		envConfig.PostgresOne.Host,
+		envConfig.PostgresOne.Port,
+		envConfig.PostgresOne.Database,
 	)
-	db, err := sql.Open("mysql", url)
+	connection, err := sql.Open(
+		"pgx",
+		url,
+	)
 	if err != nil {
 		panic(err)
 	}
-	return &MariaDbOneDatabase{
-		Db: db,
+	return &PostgresOneDatabase{
+		Connection: connection,
 	}
 }
