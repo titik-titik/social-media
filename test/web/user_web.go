@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"social-media/internal/entity"
-	"social-media/internal/model"
 	"social-media/internal/model/request"
 	"testing"
 
@@ -64,7 +63,7 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &model.Response[*entity.User]{}
+	bodyResponse := &response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -103,7 +102,7 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &model.Response[*entity.User]{}
+	bodyResponse := &response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -142,7 +141,7 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &model.Response[*entity.User]{}
+	bodyResponse := &response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -191,7 +190,7 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &model.Response[*entity.User]{}
+	bodyResponse := &response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -231,7 +230,7 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &model.Response[*entity.User]{}
+	bodyResponse := &response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
