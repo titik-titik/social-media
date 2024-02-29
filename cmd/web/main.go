@@ -24,22 +24,12 @@ func main() {
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 
 	userRepository := repository.NewUserRepository(databaseConfig)
-	repositoryConfig := config.NewRepositoryConfig(
-		userRepository,
-	)
+	userUseCase := use_case.NewUserUseCase(userRepository)
 
-	userUseCase := use_case.NewUserUseCase(repositoryConfig)
-	useCaseConfig := config.NewUseCaseConfig(
-		userUseCase,
-	)
-
-	userController := http_delivery.NewUserController(useCaseConfig)
-	controllerConfig := config.NewControllerConfig(
-		userController,
-	)
+	userController := http_delivery.NewUserController(userUseCase)
 
 	router := mux.NewRouter()
-	userRoute := route.NewUserRoute(router, controllerConfig)
+	userRoute := route.NewUserRoute(router, userController)
 	rootRoute := route.NewRootRoute(
 		router,
 		userRoute,
