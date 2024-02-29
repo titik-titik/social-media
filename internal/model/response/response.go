@@ -1,4 +1,4 @@
-package model
+package response
 
 type Response[T any] struct {
 	Message string `json:"message"`
