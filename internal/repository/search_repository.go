@@ -18,51 +18,60 @@ func NewSearchRepository(database *config.DatabaseConfig) *SearchRepository {
 	return searchRepository
 }
 
-func rowMapperForPost(rows *sql.Rows) *entity.Post {
-	foundUser := &entity.Post{}
-	scanErr := rows.Scan(
-		&foundUser.Id,
-		&foundUser.User_Id,
-		&foundUser.Description,
-		&foundUser.Image,
-		&foundUser.CreatedAt,
-		&foundUser.UpdatedAt,
-		&foundUser.DeletedAt,
-	)
-	if scanErr != nil {
-		panic(scanErr)
+func deserializeRowsForPost(rows *sql.Rows) []*entity.Post {
+	var foundPosts []*entity.Post
+	for rows.Next() {
+		foundPost := &entity.Post{}
+		scanErr := rows.Scan(
+			&foundPost.Id,
+			&foundPost.User_Id,
+			&foundPost.Description,
+			&foundPost.Image,
+			&foundPost.UpdatedAt,
+			&foundPost.CreatedAt,
+			&foundPost.DeletedAt,
+		)
+		if scanErr != nil {
+			panic(scanErr)
+		}
+
+		foundPost.CreatedAt.Time = foundPost.CreatedAt.Time.UTC()
+		foundPost.UpdatedAt.Time = foundPost.UpdatedAt.Time.UTC()
+		foundPost.DeletedAt.Time = foundPost.DeletedAt.Time.UTC()
+		foundPosts = append(foundPosts, foundPost)
 	}
-	return foundUser
+	return foundPosts
 }
 
-func (searchRepository *SearchRepository) FindAllUser() *[]entity.User {
-	rows, queryErr := searchRepository.Database.MariaDbOneDatabase.Db.Query(
+
+func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
+	begin, beginErr := searchRepository.Database.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+	rows, queryErr := begin.Query(
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user", nil,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
 
-	var foundAllUser []entity.User
-	for rows.Next() {
-		foundUser := rowMapper(rows)
-		foundAllUser = append(foundAllUser, *foundUser)
-	}
-	return &foundAllUser
+	foundAllUser := deserializeRows(rows)
+	return foundAllUser
 
 }
 
-func (searchRepository *SearchRepository) FindAllPostByUserId(id string) *[]entity.Post {
-	rows, queryErr := searchRepository.Database.MariaDbOneDatabase.Db.Query(
+func (searchRepository *SearchRepository) FindAllPostByUserId(id string) []*entity.Post {
+	begin, beginErr := searchRepository.Database.PostgresOneDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+	rows, queryErr := begin.Query(
 		"SELECT id, user_id, description, image, created_at, updated_at, deleted_at FROM post where user_id = ? LIMIT 1", id,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
-	var foundAllPost []entity.Post = nil
-	for rows.Next() {
-		foundPost := rowMapperForPost(rows)
-		foundAllPost = append(foundAllPost, *foundPost)
-	}
-	return &foundAllPost
+	foundAllPosts := deserializeRowsForPost(rows)
+	return foundAllPosts
 }
