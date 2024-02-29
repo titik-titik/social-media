@@ -42,6 +42,7 @@ func InitializeRedis(envPath string) *redis.Client {
 	// Test connection and authentication to Redis
 	ctx := context.Background()
 	_, err = RedisClient.Ping(ctx).Result()
+
 	if err != nil {
 		fmt.Println("Error connecting to Redis:", err)
 		// Stop the program or handle the error according to your needs
@@ -49,6 +50,7 @@ func InitializeRedis(envPath string) *redis.Client {
 	}
 
 	fmt.Printf("Connected to Redis at: %s\n", RedisAddr)
+
 	return RedisClient
 }
 
@@ -56,8 +58,10 @@ func InitializeRedis(envPath string) *redis.Client {
 func CloseRedis() error {
 	if err := RedisClient.Close(); err != nil {
 		fmt.Println("Error closing Redis client:", err)
+
 		return err
 	}
+
 	return nil
 }
 
@@ -68,7 +72,7 @@ func InsertData(redisKey string, data []byte, expirationTime time.Time) error {
 
 	err := RedisClient.SetEx(ctx, redisKey, data, expirationDuration).Err()
 	if err != nil {
-		return fmt.Errorf("error setting data to cache: %v", err)
+		return fmt.Errorf("error setting data to cache: %w", err)
 	}
 
 	return nil
