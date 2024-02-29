@@ -46,8 +46,6 @@ func deserializeRows(rows *sql.Rows) []*entity.User {
 	return foundUsers
 }
 
-
-
 func (userRepository *UserRepository) FindOneById(id string) *entity.User {
 	begin, beginErr := userRepository.DatabaseConfig.PostgresOneDatabase.Connection.Begin()
 	if beginErr != nil {

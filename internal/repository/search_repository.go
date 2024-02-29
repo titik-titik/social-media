@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	// "social-media/internal/config"
 	"social-media/internal/config"
 	"social-media/internal/entity"
 )

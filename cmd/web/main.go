@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"net/http"
 	"social-media/internal/config"
 	http_delivery "social-media/internal/delivery/http"
 	"social-media/internal/delivery/http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
+
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -23,30 +24,26 @@ func main() {
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 
-<<<<<<< HEAD
+	userRepository := repository.NewUserRepository(databaseConfig)
 	searchRepository := repository.NewSearchRepository(databaseConfig)
-	userRepository := repository.NewUserRepository(databaseConfig)
-
-	userUseCase := use_case.NewUserUseCase(userRepository)
-	searchUseCase := use_case.NewSearchUseCase(searchRepository)
-
-	userController := http_delivery.NewUserController(userUseCase, searchUseCase)
-=======
-	userRepository := repository.NewUserRepository(databaseConfig)
 	repositoryConfig := config.NewRepositoryConfig(
 		userRepository,
+		searchRepository,
 	)
 
 	userUseCase := use_case.NewUserUseCase(repositoryConfig)
+	searchUseCase := use_case.NewSearchUseCase(repositoryConfig)
 	useCaseConfig := config.NewUseCaseConfig(
 		userUseCase,
+		searchUseCase,
 	)
 
 	userController := http_delivery.NewUserController(useCaseConfig)
+	searchController := http_delivery.NewSearchController(useCaseConfig)
 	controllerConfig := config.NewControllerConfig(
 		userController,
+		searchController,
 	)
->>>>>>> 558e4ba51ee27b0b0fb2cb0334760a582a7e6f35
 
 	router := mux.NewRouter()
 	userRoute := route.NewUserRoute(router, controllerConfig)
