@@ -16,31 +16,47 @@ import (
 func main() {
 	fmt.Println("Web started.")
 
+	// Load Environment Variable
 	errEnvLoad := godotenv.Load()
 	if errEnvLoad != nil {
 		panic(fmt.Errorf("error loading .env file: %w", errEnvLoad))
 	}
 
+	// Setup Config
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 
+	// Setup Repository
 	searchRepository := repository.NewSearchRepository(databaseConfig)
 	userRepository := repository.NewUserRepository(databaseConfig)
+	postRepository := repository.NewPostRepository()
 
+	// Setup UseCase
 	_ = use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)
+	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
 
+	// Setup Controller
 	userController := http_delivery.NewUserController(userUseCase)
+	postController := http_delivery.NewPostController(postUseCase)
 
+	// init router
 	router := mux.NewRouter()
+
+	//define routes
 	userRoute := route.NewUserRoute(router, userController)
+	postRoute := route.NewPostRoute(router, postController)
+
+	//bootstrap route
 	rootRoute := route.NewRootRoute(
 		router,
 		userRoute,
+		postRoute,
 	)
 
 	rootRoute.Register()
 
+	// Setup Engine
 	address := fmt.Sprintf(
 		"%s:%s",
 		envConfig.App.Host,
