@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"social-media/internal/model"
 	"social-media/internal/model/response"
 	"social-media/internal/use_case"
-	"time"
 )
 
 type AuthController struct {
@@ -18,39 +18,53 @@ func NewAuthController(AuthUseCase *use_case.AuthUseCase) *AuthController {
 }
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
-	var user struct {
-		ID       string `json:"id"`
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	var req model.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// Use NewErrorResponse for error response
+		resp := response.NewResponse("Failed to read user data from the request", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(resp.Code)
 
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		response.ErrorResponse(w, "Failed to read user data from the request", http.StatusBadRequest)
+		responseJsonByte, marshalErr := json.Marshal(resp)
+		if marshalErr != nil {
+			panic(marshalErr)
+		}
+		_, writeErr := w.Write(responseJsonByte)
+		if writeErr != nil {
+			panic(writeErr)
+		}
 		return
 	}
 
-	err := c.AuthUseCase.Register(user.ID, user.Name, user.Email, user.Password)
+	err := c.AuthUseCase.Register(req.Username, req.Password, req.Email)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Failed to create user: %v", err)
-		response.ErrorResponse(w, errorMessage, http.StatusInternalServerError)
+		// Use NewErrorResponse for error response
+		resp := response.NewResponse(errorMessage, http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(resp.Code)
+
+		responseJsonByte, marshalErr := json.Marshal(resp)
+		if marshalErr != nil {
+			panic(marshalErr)
+		}
+		_, writeErr := w.Write(responseJsonByte)
+		if writeErr != nil {
+			panic(writeErr)
+		}
 		return
 	}
 
-	currentTime := time.Now()
-
-	// Create a user data object to be sent in the response
-	userData := struct {
-		Name      string    `json:"name"`
-		Email     string    `json:"email"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-	}{
-		Name:      user.Name,
-		Email:     user.Email,
-		CreatedAt: currentTime,
-		UpdatedAt: currentTime,
+	// Use NewSuccessResponse for success response
+	resp := response.NewResponse("Success", http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.Code)
+	responseJsonByte, marshalErr := json.Marshal(resp)
+	if marshalErr != nil {
+		panic(marshalErr)
 	}
-
-	response.SuccessResponse(w, "Success", userData, http.StatusCreated)
+	_, writeErr := w.Write(responseJsonByte)
+	if writeErr != nil {
+		panic(writeErr)
+	}
 }
