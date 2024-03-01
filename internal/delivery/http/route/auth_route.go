@@ -20,4 +20,5 @@ func NewAuthRoute(router *mux.Router, AuthController *http.AuthController) *Auth
 }
 
 func (AuthRoute *AuthRoute) Register() {
+	AuthRoute.Router.HandleFunc("/register", AuthRoute.AuthController.Register).Methods("POST")
 }
