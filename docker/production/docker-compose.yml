@@ -16,12 +16,40 @@ services:
       - "${REDIS_ONE_PORT}:6379"
     command: [ "redis-server", "--requirepass", "${REDIS_ONE_PASSWORD}" ]
   cockroachdb-one:
-    image: cockroachdb:latest
+    image: cockroachdb/cockroach:latest
     ports:
       - "${COCKROACHDB_ONE_NODE_PORT}:26357"
+      - "${COCKROACHDB_ONE_SQL_PORT}:26257"
+      - "${COCKROACHDB_ONE_HTTP_PORT}:8080"
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        cockroach start \
+        --advertise-addr=cockroachdb-one:26357 \
+        --http-addr=cockroachdb-one:8080 \
+        --listen-addr=cockroachdb-one:26357 \
+        --sql-addr=cockroachdb-one:26257 \
+        --join=cockroachdb-one:26357 \
+        --insecure
+  cockroachdb-init:
+    image: cockroachdb/cockroach:latest
     volumes:
       - "../../db/cockroachdb_one/migration:/docker-entrypoint-initdb.d"
-    environment:
-      COCKROACHDB_USER: ${COCKROACHDB_ONE_USER}
-      COCKROACHDB_PASSWORD: ${COCKROACHDB_ONE_PASSWORD}
-      COCKROACHDB_DB: ${COCKROACHDB_ONE_DATABASE}
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        cockroach init --host=cockroachdb-one:26357 --insecure \
+        && \
+        cockroach sql --host=cockroachdb-one:26257 --insecure \
+        --execute="CREATE ROLE IF NOT EXISTS \"${COCKROACHDB_ONE_USER}\" WITH LOGIN;" \
+        --execute="CREATE DATABASE IF NOT EXISTS \"${COCKROACHDB_ONE_DATABASE}\" WITH OWNER \"${COCKROACHDB_ONE_USER}\";" \
+        --execute="GRANT ALL ON DATABASE \"${COCKROACHDB_ONE_DATABASE}\" TO \"${COCKROACHDB_ONE_USER}\";" \
+        --execute="\c ${COCKROACHDB_ONE_DATABASE};" \
+        --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO \"${COCKROACHDB_ONE_USER}\";" \
+        --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON SEQUENCES TO \"${COCKROACHDB_ONE_USER}\";" \
+        && \
+        cockroach sql --host=cockroachdb-one:26257 --insecure \
+        --database=${COCKROACHDB_ONE_DATABASE} \
+        --file=/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - cockroachdb-one
