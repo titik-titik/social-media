@@ -52,5 +52,5 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: currentTime,
 	}
 
-	responses.SuccessResponse(w, "Success", userData, http.StatusCreated)
+	response.SuccessResponse(w, "Success", userData, http.StatusCreated)
 }
