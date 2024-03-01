@@ -25,18 +25,10 @@ func NewUserController(userUseCase *use_case.UserUseCase) *UserController {
 func (userController *UserController) FindOneById(writer http.ResponseWriter, reader *http.Request) {
 	vars := mux.Vars(reader)
 	id := vars["id"]
+
 	result := userController.UserUseCase.FindOneById(id)
-	response := model_response.NewResponse(result.Message, result.Data)
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(result.Code)
-	responseJsonByte, marshalErr := json.Marshal(response)
-	if marshalErr != nil {
-		panic(marshalErr)
-	}
-	_, writeErr := writer.Write(responseJsonByte)
-	if writeErr != nil {
-		panic(writeErr)
-	}
+
+	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 }
 
 func (userController *UserController) FindOneByOneParam(writer http.ResponseWriter, reader *http.Request) {
@@ -45,83 +37,40 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 
 	if email != "" {
 		result := userController.UserUseCase.FindOneByEmail(email)
-		response := model_response.NewResponse(result.Message, result.Data)
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(result.Code)
-		responseJsonByte, marshalErr := json.Marshal(response)
-		if marshalErr != nil {
-			panic(marshalErr)
-		}
-		_, writeErr := writer.Write(responseJsonByte)
-		if writeErr != nil {
-			panic(writeErr)
-		}
+		model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 	} else if username != "" {
 		result := userController.UserUseCase.FindOneByUsername(username)
-		response := model_response.NewResponse(result.Message, result.Data)
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(result.Code)
-		responseJsonByte, marshalErr := json.Marshal(response)
-		if marshalErr != nil {
-			panic(marshalErr)
-		}
-		_, writeErr := writer.Write(responseJsonByte)
-		if writeErr != nil {
-			panic(writeErr)
-		}
+		model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 	} else {
 		response := &model_response.Response[*entity.User]{
 			Message: "User parameter is invalid.",
 			Data:    nil,
 		}
-		writer.Header().Set("Content-Type", "application/json")
-		writer.WriteHeader(http.StatusNotFound)
-		responseJsonByte, marshalErr := json.Marshal(response)
-		if marshalErr != nil {
-			panic(marshalErr)
-		}
-		_, writeErr := writer.Write(responseJsonByte)
-		if writeErr != nil {
-			panic(writeErr)
-		}
+
+		model_response.NewResponse(writer, http.StatusText(http.StatusNotFound), response, http.StatusOK)
 	}
 }
 
 func (userController *UserController) PatchOneById(writer http.ResponseWriter, reader *http.Request) {
 	vars := mux.Vars(reader)
 	id := vars["id"]
+
 	request := &model_request.UserPatchOneByIdRequest{}
 	decodeErr := json.NewDecoder(reader.Body).Decode(request)
 	if decodeErr != nil {
 		panic(decodeErr)
 	}
+
 	result := userController.UserUseCase.PatchOneByIdFromRequest(id, request)
-	response := model_response.NewResponse(result.Message, result.Data)
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(result.Code)
-	responseJsonByte, marshalErr := json.Marshal(response)
-	if marshalErr != nil {
-		panic(marshalErr)
-	}
-	_, writeErr := writer.Write(responseJsonByte)
-	if writeErr != nil {
-		panic(writeErr)
-	}
+
+	model_response.NewResponse(writer, result.Message, result.Data, http.StatusOK)
 }
 
 func (userController *UserController) DeleteOneById(writer http.ResponseWriter, reader *http.Request) {
 	vars := mux.Vars(reader)
 	id := vars["id"]
+
 	result := userController.UserUseCase.DeleteOneById(id)
-	response := model_response.NewResponse(result.Message, result.Data)
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(result.Code)
-	responseJsonByte, marshalErr := json.Marshal(response)
-	if marshalErr != nil {
-		panic(marshalErr)
-	}
-	_, writeErr := writer.Write(responseJsonByte)
-	if writeErr != nil {
-		panic(writeErr)
-	}
+
+	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 }

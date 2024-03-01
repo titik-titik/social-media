@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"social-media/internal/config"
-	http_delivery "social-media/internal/delivery/delivery_http"
+	httpdelivery "social-media/internal/delivery/delivery_http"
 	"social-media/internal/delivery/delivery_http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
@@ -37,8 +37,8 @@ func main() {
 	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
 
 	// Setup Controller
-	userController := http_delivery.NewUserController(userUseCase)
-	postController := http_delivery.NewPostController(postUseCase)
+	userController := httpdelivery.NewUserController(userUseCase)
+	postController := httpdelivery.NewPostController(postUseCase)
 
 	// init router
 	router := mux.NewRouter()
