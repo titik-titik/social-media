@@ -19,52 +19,18 @@ func NewAuthController(AuthUseCase *use_case.AuthUseCase) *AuthController {
 
 func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	var req model.RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		// Use NewErrorResponse for error response
-		resp := response.NewResponse("Failed to read user data from the request", http.StatusBadRequest)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(resp.Code)
 
-		responseJsonByte, marshalErr := json.Marshal(resp)
-		if marshalErr != nil {
-			panic(marshalErr)
-		}
-		_, writeErr := w.Write(responseJsonByte)
-		if writeErr != nil {
-			panic(writeErr)
-		}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.ErrorResponse(w, "Failed to read user data from the request", http.StatusBadRequest)
 		return
 	}
 
 	err := c.AuthUseCase.Register(req.Username, req.Password, req.Email)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Failed to create user: %v", err)
-		// Use NewErrorResponse for error response
-		resp := response.NewResponse(errorMessage, http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(resp.Code)
-
-		responseJsonByte, marshalErr := json.Marshal(resp)
-		if marshalErr != nil {
-			panic(marshalErr)
-		}
-		_, writeErr := w.Write(responseJsonByte)
-		if writeErr != nil {
-			panic(writeErr)
-		}
+		response.ErrorResponse(w, errorMessage, http.StatusInternalServerError)
 		return
 	}
 
-	// Use NewSuccessResponse for success response
-	resp := response.NewResponse("Success", http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.Code)
-	responseJsonByte, marshalErr := json.Marshal(resp)
-	if marshalErr != nil {
-		panic(marshalErr)
-	}
-	_, writeErr := w.Write(responseJsonByte)
-	if writeErr != nil {
-		panic(writeErr)
-	}
+	response.SuccessResponse(w, "Success", nil, http.StatusCreated)
 }
