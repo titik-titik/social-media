@@ -1,23 +1,29 @@
 package repository
 
 import (
-	"database/sql"
+	"social-media/internal/config"
 	"time"
 )
 
 type AuthRepository struct {
-	db *sql.DB
+	DatabaseConfig *config.DatabaseConfig
+	PostgresOneDB  *config.PostgresOneDatabase
 }
 
-func NewAuthRepository(db *sql.DB) *AuthRepository {
-	return &AuthRepository{db: db}
+func NewAuthRepository(databaseConfig *config.DatabaseConfig) *AuthRepository {
+	authRepository := &AuthRepository{
+		DatabaseConfig: databaseConfig,
+		PostgresOneDB:  databaseConfig.PostgresOneDatabase,
+	}
+	return authRepository
 }
-func (ar *AuthRepository) Register(id, name, email, hashedPassword string, createdAt, updatedAt time.Time) error {
+
+func (ar *AuthRepository) Register(id, username, password, email, avatarURL, bio string, isVerified bool, createdAt, updatedAt time.Time) error {
 	createSQL := `
-	    INSERT INTO users (id, name, email, password, created_at, updated_at)
-	    VALUES (?, ?, ?, ?, CONVERT_TZ(?, '+00:00', '+07:00'), CONVERT_TZ(?, '+00:00', '+07:00'))
+	    INSERT INTO users (id, username, password, email, avatar_url, bio, is_verified, created_at, updated_at)
+	    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := ar.db.Exec(createSQL, id, name, email, hashedPassword, createdAt.UTC(), updatedAt.UTC())
+	_, err := ar.PostgresOneDB.Connection.Exec(createSQL, id, username, password, email, avatarURL, bio, isVerified, createdAt, updatedAt)
 	return err
 }
