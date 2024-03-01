@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"social-media/internal/entity"
-	"social-media/internal/model/request"
-	"testing"
-
 	"github.com/guregu/null"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"social-media/internal/entity"
+	model_request "social-media/internal/model/request"
+	model_response "social-media/internal/model/response"
+	"testing"
 )
 
 type UserWeb struct {
@@ -63,7 +63,7 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &response.Response[*entity.User]{}
+	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -102,7 +102,7 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &response.Response[*entity.User]{}
+	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -141,7 +141,7 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &response.Response[*entity.User]{}
+	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -160,7 +160,7 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 
 	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 
-	bodyRequest := &request.UserPatchOneByIdRequest{}
+	bodyRequest := &model_request.UserPatchOneByIdRequest{}
 	bodyRequest.Name = null.NewString(selectedUserData.Name.String+"patched", true)
 	bodyRequest.Email = null.NewString(selectedUserData.Email.String+"patched", true)
 	bodyRequest.Username = null.NewString(selectedUserData.Username.String+"patched", true)
@@ -190,7 +190,7 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &response.Response[*entity.User]{}
+	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
@@ -230,7 +230,7 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 
-	bodyResponse := &response.Response[*entity.User]{}
+	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Error(decodeErr)
