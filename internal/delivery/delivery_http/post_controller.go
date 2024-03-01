@@ -33,24 +33,7 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-
-	data := response.NewResponse(http.StatusText(http.StatusCreated), new(string))
-
-	res, err := json.Marshal(data)
-
-	if err != nil {
-		http.Error(w, "Failed to create new post", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(res)
-
-	if err != nil {
-		http.Error(w, "Failed to create new post", http.StatusInternalServerError)
-		return
-	}
+	response.NewResponse(w, http.StatusText(http.StatusOK), new(string), http.StatusOK)
 }
 
 func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
@@ -66,22 +49,5 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	data := response.NewResponse(http.StatusText(http.StatusOK), post)
-
-	res, err := json.Marshal(data)
-
-	if err != nil {
-		http.Error(w, "Failed to get post", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(res)
-
-	if err != nil {
-		http.Error(w, "Failed to get post", http.StatusInternalServerError)
-		return
-	}
+	response.NewResponse(w, http.StatusText(http.StatusOK), post, http.StatusOK)
 }
