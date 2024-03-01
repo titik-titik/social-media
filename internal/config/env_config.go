@@ -7,7 +7,7 @@ type AppEnv struct {
 	Port string
 }
 
-type PostgresOneEnv struct {
+type CockroachdbOneEnv struct {
 	Host     string
 	Port     string
 	User     string
@@ -22,9 +22,9 @@ type RedisOneEnv struct {
 }
 
 type EnvConfig struct {
-	App         *AppEnv
-	PostgresOne *PostgresOneEnv
-	RedisOne    *RedisOneEnv
+	App            *AppEnv
+	CockroachdbOne *CockroachdbOneEnv
+	RedisOne       *RedisOneEnv
 }
 
 func NewEnvConfig() *EnvConfig {
@@ -33,12 +33,12 @@ func NewEnvConfig() *EnvConfig {
 			Host: os.Getenv("APP_HOST"),
 			Port: os.Getenv("APP_PORT"),
 		},
-		PostgresOne: &PostgresOneEnv{
-			Host:     os.Getenv("POSTGRES_ONE_HOST"),
-			Port:     os.Getenv("POSTGRES_ONE_PORT"),
-			User:     os.Getenv("POSTGRES_ONE_USER"),
-			Password: os.Getenv("POSTGRES_ONE_PASSWORD"),
-			Database: os.Getenv("POSTGRES_ONE_DATABASE"),
+		CockroachdbOne: &CockroachdbOneEnv{
+			Host:     os.Getenv("COCKROACHDB_ONE_HOST"),
+			Port:     os.Getenv("COCKROACHDB_ONE_SQL_PORT"),
+			User:     os.Getenv("COCKROACHDB_ONE_USER"),
+			Password: os.Getenv("COCKROACHDB_ONE_PASSWORD"),
+			Database: os.Getenv("COCKROACHDB_ONE_DATABASE"),
 		},
 		RedisOne: &RedisOneEnv{
 			Host:     os.Getenv("REDIS_ONE_HOST"),

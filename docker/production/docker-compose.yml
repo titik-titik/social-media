@@ -8,20 +8,20 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command: [ "./build" ]
     depends_on:
-      - postgres-one
+      - cockroachdb-one
       - redis-one
   redis-one:
     image: redis:latest
     ports:
       - "${REDIS_ONE_PORT}:6379"
     command: [ "redis-server", "--requirepass", "${REDIS_ONE_PASSWORD}" ]
-  postgres-one:
-    image: postgres:latest
+  cockroachdb-one:
+    image: cockroachdb:latest
     ports:
-      - "${POSTGRES_ONE_PORT}:5432"
+      - "${COCKROACHDB_ONE_NODE_PORT}:26357"
     volumes:
-      - "../../db/postgres_one/migration:/docker-entrypoint-initdb.d"
+      - "../../db/cockroachdb_one/migration:/docker-entrypoint-initdb.d"
     environment:
-      POSTGRES_USER: ${POSTGRES_ONE_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_ONE_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_ONE_DATABASE}
+      COCKROACHDB_USER: ${COCKROACHDB_ONE_USER}
+      COCKROACHDB_PASSWORD: ${COCKROACHDB_ONE_PASSWORD}
+      COCKROACHDB_DB: ${COCKROACHDB_ONE_DATABASE}
