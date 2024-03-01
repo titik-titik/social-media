@@ -1,11 +1,11 @@
-package http
+package delivery_http
 
 import (
 	"encoding/json"
 	"net/http"
 	"social-media/internal/entity"
-	"social-media/internal/model/request"
-	"social-media/internal/model/response"
+	model_request "social-media/internal/model/request"
+	model_response "social-media/internal/model/response"
 	"social-media/internal/use_case"
 
 	"github.com/gorilla/mux"
@@ -26,7 +26,7 @@ func (userController *UserController) FindOneById(writer http.ResponseWriter, re
 	vars := mux.Vars(reader)
 	id := vars["id"]
 	result := userController.UserUseCase.FindOneById(id)
-	response := response.NewResponse(result.Message, result.Data)
+	response := model_response.NewResponse(result.Message, result.Data)
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(result.Code)
 	responseJsonByte, marshalErr := json.Marshal(response)
@@ -45,7 +45,7 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 
 	if email != "" {
 		result := userController.UserUseCase.FindOneByEmail(email)
-		response := response.NewResponse(result.Message, result.Data)
+		response := model_response.NewResponse(result.Message, result.Data)
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(result.Code)
 		responseJsonByte, marshalErr := json.Marshal(response)
@@ -58,7 +58,7 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 		}
 	} else if username != "" {
 		result := userController.UserUseCase.FindOneByUsername(username)
-		response := response.NewResponse(result.Message, result.Data)
+		response := model_response.NewResponse(result.Message, result.Data)
 		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(result.Code)
 		responseJsonByte, marshalErr := json.Marshal(response)
@@ -70,7 +70,7 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 			panic(writeErr)
 		}
 	} else {
-		response := &response.Response[*entity.User]{
+		response := &model_response.Response[*entity.User]{
 			Message: "User parameter is invalid.",
 			Data:    nil,
 		}
@@ -90,13 +90,13 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 func (userController *UserController) PatchOneById(writer http.ResponseWriter, reader *http.Request) {
 	vars := mux.Vars(reader)
 	id := vars["id"]
-	request := &request.UserPatchOneByIdRequest{}
+	request := &model_request.UserPatchOneByIdRequest{}
 	decodeErr := json.NewDecoder(reader.Body).Decode(request)
 	if decodeErr != nil {
 		panic(decodeErr)
 	}
 	result := userController.UserUseCase.PatchOneByIdFromRequest(id, request)
-	response := response.NewResponse(result.Message, result.Data)
+	response := model_response.NewResponse(result.Message, result.Data)
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(result.Code)
 	responseJsonByte, marshalErr := json.Marshal(response)
@@ -113,7 +113,7 @@ func (userController *UserController) DeleteOneById(writer http.ResponseWriter, 
 	vars := mux.Vars(reader)
 	id := vars["id"]
 	result := userController.UserUseCase.DeleteOneById(id)
-	response := response.NewResponse(result.Message, result.Data)
+	response := model_response.NewResponse(result.Message, result.Data)
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(result.Code)
 	responseJsonByte, marshalErr := json.Marshal(response)
