@@ -18,7 +18,7 @@ func NewAuthUseCase(AuthRepository repository.AuthRepository) *AuthUseCase {
 	}
 }
 
-func (c *AuthUseCase) Register(username, password, email, avatarURL, bio string) error {
+func (c *AuthUseCase) Register(username, password, email string) error {
 	// Hashing password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
