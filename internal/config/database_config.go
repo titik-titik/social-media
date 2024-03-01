@@ -7,29 +7,40 @@ import (
 )
 
 type DatabaseConfig struct {
-	PostgresOneDatabase *PostgresOneDatabase
+	CockroachdbOneDatabase *CockroachdbOneDatabase
 }
 
-type PostgresOneDatabase struct {
+type CockroachdbOneDatabase struct {
 	Connection *sql.DB
 }
 
 func NewDatabaseConfig(envConfig *EnvConfig) *DatabaseConfig {
 	databaseConfig := &DatabaseConfig{
-		PostgresOneDatabase: NewPostgresOneDatabase(envConfig),
+		CockroachdbOneDatabase: NewCockroachdbOneDatabase(envConfig),
 	}
 	return databaseConfig
 }
 
-func NewPostgresOneDatabase(envConfig *EnvConfig) *PostgresOneDatabase {
-	url := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
-		envConfig.PostgresOne.User,
-		envConfig.PostgresOne.Password,
-		envConfig.PostgresOne.Host,
-		envConfig.PostgresOne.Port,
-		envConfig.PostgresOne.Database,
-	)
+func NewCockroachdbOneDatabase(envConfig *EnvConfig) *CockroachdbOneDatabase {
+	var url string
+	if envConfig.CockroachdbOne.Password == "" {
+		url = fmt.Sprintf(
+			"postgresql://%s@%s:%s/%s",
+			envConfig.CockroachdbOne.User,
+			envConfig.CockroachdbOne.Host,
+			envConfig.CockroachdbOne.Port,
+			envConfig.CockroachdbOne.Database,
+		)
+	} else {
+		url = fmt.Sprintf(
+			"postgresql://%s@%s:%s/%s",
+			envConfig.CockroachdbOne.User,
+			envConfig.CockroachdbOne.Host,
+			envConfig.CockroachdbOne.Port,
+			envConfig.CockroachdbOne.Database,
+		)
+	}
+
 	connection, err := sql.Open(
 		"pgx",
 		url,
@@ -37,7 +48,10 @@ func NewPostgresOneDatabase(envConfig *EnvConfig) *PostgresOneDatabase {
 	if err != nil {
 		panic(err)
 	}
-	return &PostgresOneDatabase{
+
+	cockroachdbOneDatabase := &CockroachdbOneDatabase{
 		Connection: connection,
 	}
+
+	return cockroachdbOneDatabase
 }
