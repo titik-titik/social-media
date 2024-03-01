@@ -29,5 +29,4 @@ create table "post"
 
 
 select *
-from "user"
-where id = '3a19a20c-ff4f-4f2f-8768-86925bca0339';
+from "user";

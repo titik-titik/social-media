@@ -24,9 +24,9 @@ func deserializeRowsForPost(rows *sql.Rows) []*entity.Post {
 		foundPost := &entity.Post{}
 		scanErr := rows.Scan(
 			&foundPost.Id,
-			&foundPost.User_Id,
+			&foundPost.UserId,
 			&foundPost.Description,
-			&foundPost.Image,
+			&foundPost.ImageUrl,
 			&foundPost.UpdatedAt,
 			&foundPost.CreatedAt,
 			&foundPost.DeletedAt,
@@ -43,9 +43,8 @@ func deserializeRowsForPost(rows *sql.Rows) []*entity.Post {
 	return foundPosts
 }
 
-
 func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
-	begin, beginErr := searchRepository.Database.PostgresOneDatabase.Connection.Begin()
+	begin, beginErr := searchRepository.Database.CockroachdbOneDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -62,7 +61,7 @@ func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
 }
 
 func (searchRepository *SearchRepository) FindAllPostByUserId(id string) []*entity.Post {
-	begin, beginErr := searchRepository.Database.PostgresOneDatabase.Connection.Begin()
+	begin, beginErr := searchRepository.Database.CockroachdbOneDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
