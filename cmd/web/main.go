@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"social-media/internal/config"
-	http_delivery "social-media/internal/delivery/http"
-	"social-media/internal/delivery/http/route"
+	http_delivery "social-media/internal/delivery/delivery_http"
+	"social-media/internal/delivery/delivery_http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
 
@@ -27,7 +27,7 @@ func main() {
 	searchRepository := repository.NewSearchRepository(databaseConfig)
 	userRepository := repository.NewUserRepository(databaseConfig)
 
-	searchUseCase := use_case.NewSearchUseCase(searchRepository)
+	_ = use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)
 
 	userController := http_delivery.NewUserController(userUseCase)

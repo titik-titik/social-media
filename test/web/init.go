@@ -3,10 +3,10 @@ package web
 import (
 	"fmt"
 	"net/http/httptest"
-	seeder "social-media/db/postgres_one/seeder"
+	seeder "social-media/db/cockroachdb_one/seeder"
 	"social-media/internal/config"
-	http_delivery "social-media/internal/delivery/http"
-	"social-media/internal/delivery/http/route"
+	http_delivery "social-media/internal/delivery/delivery_http"
+	"social-media/internal/delivery/delivery_http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
 
