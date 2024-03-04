@@ -11,16 +11,16 @@ type PostRoute struct {
 	PostController *delivery_http.PostController
 }
 
-func NewPostRoute(router *mux.Router, userController *delivery_http.PostController) *PostRoute {
-	userRoute := &PostRoute{
+func NewPostRoute(router *mux.Router, postController *delivery_http.PostController) *PostRoute {
+	postRoute := &PostRoute{
 		Router:         router.PathPrefix("/posts").Subrouter(),
-		PostController: userController,
+		PostController: postController,
 	}
-	return userRoute
+	return postRoute
 }
 
-func (userRoute *PostRoute) Register() {
-	userRoute.Router.HandleFunc("/{id}", userRoute.PostController.Get).Methods("GET")
-	userRoute.Router.HandleFunc("/", userRoute.PostController.Create).Methods("POST")
+func (postRoute *PostRoute) Register() {
+	postRoute.Router.HandleFunc("/{id}", postRoute.PostController.Get).Methods("GET")
+	postRoute.Router.HandleFunc("/", postRoute.PostController.Create).Methods("POST")
 
 }
