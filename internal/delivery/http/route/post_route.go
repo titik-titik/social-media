@@ -1,17 +1,17 @@
 package route
 
 import (
-	"social-media/internal/delivery/delivery_http"
+	"social-media/internal/delivery/http"
 
 	"github.com/gorilla/mux"
 )
 
 type PostRoute struct {
 	Router         *mux.Router
-	PostController *delivery_http.PostController
+	PostController *http.PostController
 }
 
-func NewPostRoute(router *mux.Router, postController *delivery_http.PostController) *PostRoute {
+func NewPostRoute(router *mux.Router, postController *http.PostController) *PostRoute {
 	postRoute := &PostRoute{
 		Router:         router.PathPrefix("/posts").Subrouter(),
 		PostController: postController,

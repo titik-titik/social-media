@@ -11,8 +11,9 @@ func NewRepositoryContainer(
 	user *repository.UserRepository,
 	search *repository.SearchRepository,
 ) *RepositoryContainer {
-	return &RepositoryContainer{
+	repositoryContainer := &RepositoryContainer{
 		User:   user,
 		Search: search,
 	}
+	return repositoryContainer
 }

@@ -42,7 +42,7 @@ func NewEnvConfig() *EnvConfig {
 		},
 		RedisOne: &RedisOneEnv{
 			Host:     os.Getenv("REDIS_ONE_HOST"),
-			Port:     os.Getenv("REDIS_ONE_PORT"),
+			Port:     os.Getenv("REDIS_ONE_CLIENT_PORT"),
 			Password: os.Getenv("REDIS_ONE_PASSWORD"),
 		},
 	}

@@ -1,4 +1,4 @@
-package delivery_http
+package http
 
 import "social-media/internal/use_case"
 

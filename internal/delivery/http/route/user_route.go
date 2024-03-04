@@ -1,17 +1,17 @@
 package route
 
 import (
-	"social-media/internal/delivery/delivery_http"
+	"social-media/internal/delivery/http"
 
 	"github.com/gorilla/mux"
 )
 
 type UserRoute struct {
 	Router         *mux.Router
-	UserController *delivery_http.UserController
+	UserController *http.UserController
 }
 
-func NewUserRoute(router *mux.Router, userController *delivery_http.UserController) *UserRoute {
+func NewUserRoute(router *mux.Router, userController *http.UserController) *UserRoute {
 	userRoute := &UserRoute{
 		Router:         router.PathPrefix("/users").Subrouter(),
 		UserController: userController,

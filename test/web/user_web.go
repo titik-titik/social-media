@@ -47,17 +47,14 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
-		t.Error(newRequestErr)
-		return
+		t.Fatal(newRequestErr)
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if newRequestErr != nil {
-		t.Error(newRequestErr)
-		return
+		t.Fatal(newRequestErr)
 	}
 	if doErr != nil {
-		t.Error(doErr)
-		return
+		t.Fatal(doErr)
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -66,8 +63,7 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
-		t.Error(decodeErr)
-		return
+		t.Fatal(decodeErr)
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)
@@ -81,22 +77,15 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	defer testWeb.AllSeeder.Down()
 
 	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
-	email, valueErr := selectedUserData.Email.Value()
-	if valueErr != nil {
-		t.Error(valueErr)
-		return
-	}
 
-	url := fmt.Sprintf("%s/%s?email=%s", testWeb.Server.URL, userWeb.Path, email)
+	url := fmt.Sprintf("%s/%s?email=%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Email.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
-		t.Error(newRequestErr)
-		return
+		t.Fatal(newRequestErr)
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
-		t.Error(doErr)
-		return
+		t.Fatal(doErr)
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -105,8 +94,7 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
-		t.Error(decodeErr)
-		return
+		t.Fatal(decodeErr)
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)
@@ -120,22 +108,15 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	defer testWeb.AllSeeder.Down()
 
 	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
-	username, valueErr := selectedUserData.Username.Value()
-	if valueErr != nil {
-		t.Error(valueErr)
-		return
-	}
 
-	url := fmt.Sprintf("%s/%s?username=%s", testWeb.Server.URL, userWeb.Path, username)
+	url := fmt.Sprintf("%s/%s?username=%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Username.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
-		t.Error(newRequestErr)
-		return
+		t.Fatal(newRequestErr)
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
-		t.Error(doErr)
-		return
+		t.Fatal(doErr)
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -144,8 +125,7 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
-		t.Error(decodeErr)
-		return
+		t.Fatal(decodeErr)
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)
@@ -170,21 +150,18 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 
 	bodyRequestJsonByte, marshalErr := json.Marshal(bodyRequest)
 	if marshalErr != nil {
-		t.Error(marshalErr)
-		return
+		t.Fatal(marshalErr)
 	}
 	bodyRequestBuffer := bytes.NewBuffer(bodyRequestJsonByte)
 
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodPatch, url, bodyRequestBuffer)
 	if newRequestErr != nil {
-		t.Error(newRequestErr)
-		return
+		t.Fatal(newRequestErr)
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
-		t.Error(doErr)
-		return
+		t.Fatal(doErr)
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -193,8 +170,7 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
-		t.Error(decodeErr)
-		return
+		t.Fatal(decodeErr)
 	}
 
 	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
@@ -218,13 +194,11 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodDelete, url, http.NoBody)
 	if newRequestErr != nil {
-		t.Error(newRequestErr)
-		return
+		t.Fatal(newRequestErr)
 	}
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
-		t.Error(doErr)
-		return
+		t.Fatal(doErr)
 	}
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
@@ -233,8 +207,7 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
-		t.Error(decodeErr)
-		return
+		t.Fatal(decodeErr)
 	}
 
 	assert.Equal(t, selectedUserData, bodyResponse.Data)

@@ -3,8 +3,8 @@ package container
 import (
 	"fmt"
 	"social-media/internal/config"
-	httpdelivery "social-media/internal/delivery/delivery_http"
-	"social-media/internal/delivery/delivery_http/route"
+	http_delivery "social-media/internal/delivery/http"
+	"social-media/internal/delivery/http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
 
@@ -29,42 +29,37 @@ func NewWebContainer() *WebContainer {
 		panic(fmt.Errorf("error loading .env file: %w", errEnvLoad))
 	}
 
-	// Setup Config
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 
-	// Setup Repository
 	searchRepository := repository.NewSearchRepository(databaseConfig)
 	userRepository := repository.NewUserRepository(databaseConfig)
-	// postRepository := repository.NewPostRepository()
+	postRepository := repository.NewPostRepository()
 	repositoryContainer := NewRepositoryContainer(userRepository, searchRepository)
-	// Setup UseCase
+
 	searchUseCase := use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)
-	// postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
+	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
 	useCaseContainer := NewUseCaseContainer(userUseCase, searchUseCase)
-	// Setup Controller
-	userController := httpdelivery.NewUserController(userUseCase)
-	// postController := httpdelivery.NewPostController(postUseCase)
+
+	userController := http_delivery.NewUserController(userUseCase)
+	postController := http_delivery.NewPostController(postUseCase)
 	controllerContainer := NewControllerContainer(userController)
 
-	// init router
 	router := mux.NewRouter()
 
-	//define routes
 	userRoute := route.NewUserRoute(router, userController)
-	// postRoute := route.NewPostRoute(router, postController)
+	postRoute := route.NewPostRoute(router, postController)
 
-	//bootstrap route
 	rootRoute := route.NewRootRoute(
 		router,
 		userRoute,
-		// postRoute,
+		postRoute,
 	)
 
 	rootRoute.Register()
 
-	return &WebContainer{
+	webContainer := &WebContainer{
 		Env:        envConfig,
 		Database:   databaseConfig,
 		Repository: repositoryContainer,
@@ -72,4 +67,6 @@ func NewWebContainer() *WebContainer {
 		Controller: controllerContainer,
 		Route:      rootRoute,
 	}
+
+	return webContainer
 }
