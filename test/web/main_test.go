@@ -7,7 +7,10 @@ import (
 )
 
 func Test(t *testing.T) {
-	os.Chdir("../../.")
+	chdirErr := os.Chdir("../../.")
+	if chdirErr != nil {
+		t.Fatal(chdirErr)
+	}
 	fmt.Println("TestWeb started.")
 	userWeb := NewUserWeb(t)
 	userWeb.Start()

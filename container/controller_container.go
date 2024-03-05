@@ -1,15 +1,16 @@
 package container
 
-import "social-media/internal/delivery/delivery_http"
+import "social-media/internal/delivery/http"
 
 type ControllerContainer struct {
-	User *delivery_http.UserController
+	User *http.UserController
 }
 
 func NewControllerContainer(
-	user *delivery_http.UserController,
+	user *http.UserController,
 ) *ControllerContainer {
-	return &ControllerContainer{
+	controllerContainer := &ControllerContainer{
 		User: user,
 	}
+	return controllerContainer
 }

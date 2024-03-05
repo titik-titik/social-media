@@ -11,8 +11,9 @@ func NewUseCaseContainer(
 	user *use_case.UserUseCase,
 	search *use_case.SearchUseCase,
 ) *UseCaseContainer {
-	return &UseCaseContainer{
+	useCaseContainer := &UseCaseContainer{
 		User:   user,
 		Search: search,
 	}
+	return useCaseContainer
 }

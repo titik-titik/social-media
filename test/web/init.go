@@ -13,7 +13,6 @@ type TestWeb struct {
 }
 
 func NewTestWeb() *TestWeb {
-
 	webContainer := container.NewWebContainer()
 
 	server := httptest.NewServer(webContainer.Route.Router)

@@ -9,14 +9,14 @@ import (
 func main() {
 	fmt.Println("Web started.")
 
-	WebContainer := container.NewWebContainer()
-	// Setup Engine
+	webContainer := container.NewWebContainer()
+
 	address := fmt.Sprintf(
 		"%s:%s",
-		WebContainer.Env.App.Host,
-		WebContainer.Env.App.Port,
+		webContainer.Env.App.Host,
+		webContainer.Env.App.Port,
 	)
-	listenAndServeErr := http.ListenAndServe(address, WebContainer.Route.Router)
+	listenAndServeErr := http.ListenAndServe(address, webContainer.Route.Router)
 	if listenAndServeErr != nil {
 		panic(listenAndServeErr)
 	}
