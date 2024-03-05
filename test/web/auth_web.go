@@ -29,6 +29,7 @@ func NewAuthWeb(test *testing.T) *AuthWeb {
 func (authWeb *AuthWeb) Start() {
 	authWeb.Test.Run("authWeb Register", authWeb.Register)
 }
+
 func (authWeb *AuthWeb) Register(t *testing.T) {
 	t.Parallel()
 
@@ -50,7 +51,7 @@ func (authWeb *AuthWeb) Register(t *testing.T) {
 	}
 	bodyRequestBuffer := bytes.NewBuffer(bodyRequestJsonByte)
 
-	url := fmt.Sprintf("%s/%s", testWeb.Server.URL, authWeb.Path)
+	url := fmt.Sprintf("%s/%s/register", testWeb.Server.URL, authWeb.Path)
 	request, newRequestErr := http.NewRequest(http.MethodPost, url, bodyRequestBuffer)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
