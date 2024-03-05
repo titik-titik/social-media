@@ -50,7 +50,8 @@ services:
       - |
         redis-cli \
         --cluster create \
-        ${GATEWAY_REDIS_HOST}:${GATEWAY_REDIS_PORT} \
+        ${REDIS_ONE_HOST}:${GATEWAY_REDIS_PORT} \
+        --cluster-replicas 1
     depends_on:
       - nginx-one
   cockroachdb-one:
