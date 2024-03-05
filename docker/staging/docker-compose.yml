@@ -57,15 +57,9 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
-<<<<<<< HEAD
-        cockroach init --host=cockroachdb-one:26357 --insecure \
-        && \
-        cockroach sql --host=cockroachdb-one:26257 --insecure \
-=======
         cockroach init --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} --insecure \
         && \
         cockroach sql --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_SQL_PORT} --insecure \
->>>>>>> 8948eecaaa194d13eb15a61dc1eb1ce3ad64e0a9
         --execute="CREATE ROLE IF NOT EXISTS \"${COCKROACHDB_ONE_USER}\" WITH LOGIN;" \
         --execute="CREATE DATABASE IF NOT EXISTS \"${COCKROACHDB_ONE_DATABASE}\" WITH OWNER \"${COCKROACHDB_ONE_USER}\";" \
         --execute="GRANT ALL ON DATABASE \"${COCKROACHDB_ONE_DATABASE}\" TO \"${COCKROACHDB_ONE_USER}\";" \
@@ -73,11 +67,7 @@ services:
         --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO \"${COCKROACHDB_ONE_USER}\";" \
         --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON SEQUENCES TO \"${COCKROACHDB_ONE_USER}\";" \
         && \
-<<<<<<< HEAD
-        cockroach sql --host=cockroachdb-one:26257 --insecure \
-=======
         cockroach sql --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_SQL_PORT} --insecure \
->>>>>>> 8948eecaaa194d13eb15a61dc1eb1ce3ad64e0a9
         --database=${COCKROACHDB_ONE_DATABASE} \
         --file=/docker-entrypoint-initdb.d/init.sql
     depends_on:
