@@ -16,7 +16,7 @@ func NewAuthRepository(databaseConfig *config.DatabaseConfig) *AuthRepository {
 	return authRepository
 }
 func (authRepository *AuthRepository) Register(toRegisterUser *entity.User) *entity.User {
-	begin, beginErr := authRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := authRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}

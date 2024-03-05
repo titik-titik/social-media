@@ -50,9 +50,9 @@ services:
       - |
         redis-cli \
         --cluster create \
-        ${REDIS_ONE_HOST}:${REDIS_ONE_PORT}
+        ${GATEWAY_REDIS_HOST}:${GATEWAY_REDIS_PORT} \
     depends_on:
-      - redis-one
+      - nginx-one
   cockroachdb-one:
     image: cockroachdb/cockroach:latest
     hostname: ${COCKROACHDB_ONE_HOST}
@@ -73,7 +73,7 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
-        cockroach init --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} --insecure \
+        cockroach init --host=${GATEWAY_HOST}:${COCKROACHDB_ONE_NODE_PORT} --insecure \
         && \
         cockroach sql --host=${GATEWAY_HOST}:${GATEWAY_COCKROACHDB_SQL_PORT} --insecure \
         --execute="CREATE ROLE IF NOT EXISTS \"${GATEWAY_COCKROACHDB_USER}\" WITH LOGIN;" \
@@ -87,4 +87,4 @@ services:
         --database=${GATEWAY_COCKROACHDB_DATABASE} \
         --file=/docker-entrypoint-initdb.d/init.sql
     depends_on:
-      - cockroachdb-one
+      - nginx-one
