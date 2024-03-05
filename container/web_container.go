@@ -35,25 +35,30 @@ func NewWebContainer() *WebContainer {
 	searchRepository := repository.NewSearchRepository(databaseConfig)
 	userRepository := repository.NewUserRepository(databaseConfig)
 	postRepository := repository.NewPostRepository()
-	repositoryContainer := NewRepositoryContainer(userRepository, searchRepository)
+	authRepository := repository.NewAuthRepository(databaseConfig)
+	repositoryContainer := NewRepositoryContainer(userRepository, authRepository, searchRepository)
 
 	searchUseCase := use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)
+	authUseCase := use_case.NewAuthUseCase(authRepository)
 	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
-	useCaseContainer := NewUseCaseContainer(userUseCase, searchUseCase)
+	useCaseContainer := NewUseCaseContainer(userUseCase, authUseCase, searchUseCase)
 
 	userController := http_delivery.NewUserController(userUseCase)
 	postController := http_delivery.NewPostController(postUseCase)
-	controllerContainer := NewControllerContainer(userController)
+	authController := http_delivery.NewAuthController(authUseCase)
+	controllerContainer := NewControllerContainer(userController, authController)
 
 	router := mux.NewRouter()
 
 	userRoute := route.NewUserRoute(router, userController)
+	authRoute := route.NewAuthRoute(router, authController)
 	postRoute := route.NewPostRoute(router, postController)
 
 	rootRoute := route.NewRootRoute(
 		router,
 		userRoute,
+		authRoute,
 		postRoute,
 	)
 
