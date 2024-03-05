@@ -4,12 +4,16 @@ services:
       context: ../../
       dockerfile: docker/development/Dockerfile
     hostname: ${APP_HOST}
+    deploy:
+      replicas: 1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
         ./build
   nginx-one:
     image: nginx:latest
+    deploy:
+      replicas: 1
     volumes:
       - "./nginx-one/template.nginx.conf:/etc/nginx/template.nginx.conf"
     env_file:
@@ -35,6 +39,8 @@ services:
   redis-one:
     image: redis:latest
     hostname: ${REDIS_ONE_HOST}
+    deploy:
+      replicas: 1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -45,6 +51,8 @@ services:
         --cluster-node-timeout 5000
   redis-init:
     image: redis:latest
+    deploy:
+      replicas: 1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -57,6 +65,8 @@ services:
   cockroachdb-one:
     image: cockroachdb/cockroach:latest
     hostname: ${COCKROACHDB_ONE_HOST}
+    deploy:
+      replicas: 1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -69,6 +79,8 @@ services:
         --insecure
   cockroachdb-init:
     image: cockroachdb/cockroach:latest
+    deploy:
+      replicas: 1
     volumes:
       - "../../db/cockroachdb_one/migration:/docker-entrypoint-initdb.d"
     entrypoint: [ "/bin/sh", "-c" ]
