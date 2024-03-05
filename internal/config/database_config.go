@@ -7,37 +7,37 @@ import (
 )
 
 type DatabaseConfig struct {
-	CockroachdbOneDatabase *CockroachdbOneDatabase
+	CockroachdbDatabase *CockroachdbDatabase
 }
 
-type CockroachdbOneDatabase struct {
+type CockroachdbDatabase struct {
 	Connection *sql.DB
 }
 
 func NewDatabaseConfig(envConfig *EnvConfig) *DatabaseConfig {
 	databaseConfig := &DatabaseConfig{
-		CockroachdbOneDatabase: NewCockroachdbOneDatabase(envConfig),
+		CockroachdbDatabase: NewCockroachdbDatabase(envConfig),
 	}
 	return databaseConfig
 }
 
-func NewCockroachdbOneDatabase(envConfig *EnvConfig) *CockroachdbOneDatabase {
+func NewCockroachdbDatabase(envConfig *EnvConfig) *CockroachdbDatabase {
 	var url string
-	if envConfig.CockroachdbOne.Password == "" {
+	if envConfig.Cockroachdb.Password == "" {
 		url = fmt.Sprintf(
 			"postgresql://%s@%s:%s/%s",
-			envConfig.CockroachdbOne.User,
-			envConfig.CockroachdbOne.Host,
-			envConfig.CockroachdbOne.Port,
-			envConfig.CockroachdbOne.Database,
+			envConfig.Cockroachdb.User,
+			envConfig.Cockroachdb.Host,
+			envConfig.Cockroachdb.Port,
+			envConfig.Cockroachdb.Database,
 		)
 	} else {
 		url = fmt.Sprintf(
 			"postgresql://%s@%s:%s/%s",
-			envConfig.CockroachdbOne.User,
-			envConfig.CockroachdbOne.Host,
-			envConfig.CockroachdbOne.Port,
-			envConfig.CockroachdbOne.Database,
+			envConfig.Cockroachdb.User,
+			envConfig.Cockroachdb.Host,
+			envConfig.Cockroachdb.Port,
+			envConfig.Cockroachdb.Database,
 		)
 	}
 
@@ -49,9 +49,9 @@ func NewCockroachdbOneDatabase(envConfig *EnvConfig) *CockroachdbOneDatabase {
 		panic(err)
 	}
 
-	cockroachdbOneDatabase := &CockroachdbOneDatabase{
+	cockroachdbDatabase := &CockroachdbDatabase{
 		Connection: connection,
 	}
 
-	return cockroachdbOneDatabase
+	return cockroachdbDatabase
 }

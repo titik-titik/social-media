@@ -44,7 +44,7 @@ func deserializeRowsForPost(rows *sql.Rows) []*entity.Post {
 }
 
 func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
-	begin, beginErr := searchRepository.Database.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := searchRepository.Database.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -61,7 +61,7 @@ func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
 }
 
 func (searchRepository *SearchRepository) FindAllPostByUserId(id string) []*entity.Post {
-	begin, beginErr := searchRepository.Database.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := searchRepository.Database.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}

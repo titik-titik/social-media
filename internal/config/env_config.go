@@ -7,7 +7,7 @@ type AppEnv struct {
 	Port string
 }
 
-type CockroachdbOneEnv struct {
+type CockroachdbEnv struct {
 	Host     string
 	Port     string
 	User     string
@@ -22,28 +22,28 @@ type RedisOneEnv struct {
 }
 
 type EnvConfig struct {
-	App            *AppEnv
-	CockroachdbOne *CockroachdbOneEnv
-	RedisOne       *RedisOneEnv
+	App         *AppEnv
+	Cockroachdb *CockroachdbEnv
+	RedisOne    *RedisOneEnv
 }
 
 func NewEnvConfig() *EnvConfig {
 	envConfig := &EnvConfig{
 		App: &AppEnv{
-			Host: os.Getenv("APP_HOST"),
-			Port: os.Getenv("APP_PORT"),
+			Host: os.Getenv("GATEWAY_HOST"),
+			Port: os.Getenv("GATEWAY_APP_PORT"),
 		},
-		CockroachdbOne: &CockroachdbOneEnv{
-			Host:     os.Getenv("COCKROACHDB_ONE_HOST"),
-			Port:     os.Getenv("COCKROACHDB_ONE_SQL_PORT"),
-			User:     os.Getenv("COCKROACHDB_ONE_USER"),
-			Password: os.Getenv("COCKROACHDB_ONE_PASSWORD"),
-			Database: os.Getenv("COCKROACHDB_ONE_DATABASE"),
+		Cockroachdb: &CockroachdbEnv{
+			Host:     os.Getenv("GATEWAY_HOST"),
+			Port:     os.Getenv("GATEWAY_COCKROACHDB_SQL_PORT"),
+			User:     os.Getenv("GATEWAY_COCKROACHDB_USER"),
+			Password: os.Getenv("GATEWAY_COCKROACHDB_PASSWORD"),
+			Database: os.Getenv("GATEWAY_COCKROACHDB_DATABASE"),
 		},
 		RedisOne: &RedisOneEnv{
-			Host:     os.Getenv("REDIS_ONE_HOST"),
-			Port:     os.Getenv("REDIS_ONE_CLIENT_PORT"),
-			Password: os.Getenv("REDIS_ONE_PASSWORD"),
+			Host:     os.Getenv("GATEWAY_HOST"),
+			Port:     os.Getenv("REDIS_GATEWAY_PORT"),
+			Password: os.Getenv("REDIS_GATEWAY_PASSWORD"),
 		},
 	}
 	return envConfig

@@ -47,7 +47,7 @@ func deserializeRows(rows *sql.Rows) []*entity.User {
 }
 
 func (userRepository *UserRepository) FindOneById(id string) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -74,7 +74,7 @@ func (userRepository *UserRepository) FindOneById(id string) *entity.User {
 }
 
 func (userRepository *UserRepository) FindOneByUsername(username string) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -101,7 +101,7 @@ func (userRepository *UserRepository) FindOneByUsername(username string) *entity
 }
 
 func (userRepository *UserRepository) FindOneByEmail(email string) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -128,7 +128,7 @@ func (userRepository *UserRepository) FindOneByEmail(email string) *entity.User 
 }
 
 func (userRepository *UserRepository) FindOneByEmailAndPassword(email string, password string) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -156,7 +156,7 @@ func (userRepository *UserRepository) FindOneByEmailAndPassword(email string, pa
 }
 
 func (userRepository *UserRepository) FindOneByUsernameAndPassword(username string, password string) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -184,7 +184,7 @@ func (userRepository *UserRepository) FindOneByUsernameAndPassword(username stri
 }
 
 func (userRepository *UserRepository) CreateOne(toCreateUser *entity.User) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -221,7 +221,7 @@ func (userRepository *UserRepository) CreateOne(toCreateUser *entity.User) *enti
 }
 
 func (userRepository *UserRepository) PatchOneById(id string, toPatchUser *entity.User) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}
@@ -280,7 +280,7 @@ func (userRepository *UserRepository) PatchOneById(id string, toPatchUser *entit
 }
 
 func (userRepository *UserRepository) DeleteOneById(id string) *entity.User {
-	begin, beginErr := userRepository.DatabaseConfig.CockroachdbOneDatabase.Connection.Begin()
+	begin, beginErr := userRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 	if beginErr != nil {
 		panic(beginErr)
 	}

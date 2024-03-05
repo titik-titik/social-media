@@ -3,18 +3,38 @@ services:
     build:
       context: ../../
       dockerfile: docker/development/Dockerfile
-    ports:
-      - "${APP_PORT}:${APP_PORT}"
+    hostname: ${APP_HOST}
     entrypoint: [ "/bin/sh", "-c" ]
-    command: [ "./build" ]
+    command:
+      - |
+        ./build
+  nginx-one:
+    image: nginx:latest
+    volumes:
+      - "./nginx-one/template.nginx.conf:/etc/nginx/template.nginx.conf"
+    env_file:
+      - "./.env"
+    ports:
+      - "${GATEWAY_APP_PORT}:${GATEWAY_APP_PORT}"
+      - "${GATEWAY_REDIS_PORT}:${GATEWAY_REDIS_PORT}"
+      - "${GATEWAY_COCKROACHDB_SQL_PORT}:${GATEWAY_COCKROACHDB_SQL_PORT}"
+      - "${GATEWAY_COCKROACHDB_HTTP_PORT}:${GATEWAY_COCKROACHDB_HTTP_PORT}"
+      - "${GATEWAY_COCKROACHDB_NODE_PORT}:${GATEWAY_COCKROACHDB_NODE_PORT}"
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        envsubst < /etc/nginx/template.nginx.conf > /etc/nginx/nginx.conf \
+        && \
+        nginx -t \
+        && \
+        nginx -g "daemon off;"
     depends_on:
-      - cockroachdb-one
+      - app
       - redis-one
+      - cockroachdb-one
   redis-one:
     image: redis:latest
-    ports:
-      - "${REDIS_ONE_CLIENT_PORT}:6379"
-      - "${REDIS_ONE_CLUSTER_PORT}:16379"
+    hostname: ${REDIS_ONE_HOST}
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -22,7 +42,7 @@ services:
         --requirepass ${REDIS_ONE_PASSWORD} \
         --cluster-enabled yes \
         --cluster-config-file nodes.conf \
-        --cluster-node-timeout 5000 \
+        --cluster-node-timeout 5000
   redis-init:
     image: redis:latest
     entrypoint: [ "/bin/sh", "-c" ]
@@ -30,25 +50,21 @@ services:
       - |
         redis-cli \
         --cluster create \
-        ${REDIS_ONE_CLIENT_HOST}:${REDIS_ONE_CLIENT_PORT} \
-        --cluster-replicas 1 \
+        ${GATEWAY_REDIS_HOST}:${GATEWAY_REDIS_PORT} \
     depends_on:
-      - redis-one
+      - nginx-one
   cockroachdb-one:
     image: cockroachdb/cockroach:latest
-    ports:
-      - "${COCKROACHDB_ONE_NODE_PORT}:26357"
-      - "${COCKROACHDB_ONE_SQL_PORT}:26257"
-      - "${COCKROACHDB_ONE_HTTP_PORT}:8080"
+    hostname: ${COCKROACHDB_ONE_HOST}
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
         cockroach start \
-        --advertise-addr=cockroachdb-one:26357 \
-        --http-addr=cockroachdb-one:8080 \
-        --listen-addr=cockroachdb-one:26357 \
-        --sql-addr=cockroachdb-one:26257 \
-        --join=cockroachdb-one:26357 \
+        --advertise-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} \
+        --http-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_HTTP_PORT} \
+        --listen-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} \
+        --sql-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_SQL_PORT} \
+        --join=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} \
         --insecure
   cockroachdb-init:
     image: cockroachdb/cockroach:latest
@@ -57,18 +73,18 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
-        cockroach init --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} --insecure \
+        cockroach init --host=${GATEWAY_HOST}:${COCKROACHDB_ONE_NODE_PORT} --insecure \
         && \
-        cockroach sql --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_SQL_PORT} --insecure \
-        --execute="CREATE ROLE IF NOT EXISTS \"${COCKROACHDB_ONE_USER}\" WITH LOGIN;" \
-        --execute="CREATE DATABASE IF NOT EXISTS \"${COCKROACHDB_ONE_DATABASE}\" WITH OWNER \"${COCKROACHDB_ONE_USER}\";" \
-        --execute="GRANT ALL ON DATABASE \"${COCKROACHDB_ONE_DATABASE}\" TO \"${COCKROACHDB_ONE_USER}\";" \
-        --execute="\c ${COCKROACHDB_ONE_DATABASE};" \
-        --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO \"${COCKROACHDB_ONE_USER}\";" \
-        --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON SEQUENCES TO \"${COCKROACHDB_ONE_USER}\";" \
+        cockroach sql --host=${GATEWAY_HOST}:${GATEWAY_COCKROACHDB_SQL_PORT} --insecure \
+        --execute="CREATE ROLE IF NOT EXISTS \"${GATEWAY_COCKROACHDB_USER}\" WITH LOGIN;" \
+        --execute="CREATE DATABASE IF NOT EXISTS \"${GATEWAY_COCKROACHDB_DATABASE}\" WITH OWNER \"${GATEWAY_COCKROACHDB_USER}\";" \
+        --execute="GRANT ALL ON DATABASE \"${GATEWAY_COCKROACHDB_DATABASE}\" TO \"${GATEWAY_COCKROACHDB_USER}\";" \
+        --execute="\c ${GATEWAY_COCKROACHDB_DATABASE};" \
+        --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO \"${GATEWAY_COCKROACHDB_USER}\";" \
+        --execute="ALTER DEFAULT PRIVILEGES GRANT ALL ON SEQUENCES TO \"${GATEWAY_COCKROACHDB_USER}\";" \
         && \
-        cockroach sql --host=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_SQL_PORT} --insecure \
-        --database=${COCKROACHDB_ONE_DATABASE} \
+        cockroach sql --host=${GATEWAY_HOST}:${GATEWAY_COCKROACHDB_SQL_PORT} --insecure \
+        --database=${GATEWAY_COCKROACHDB_DATABASE} \
         --file=/docker-entrypoint-initdb.d/init.sql
     depends_on:
-      - cockroachdb-one
+      - nginx-one

@@ -26,7 +26,7 @@ func NewPostUseCase(db *config.DatabaseConfig, postRepository *repository.PostRe
 }
 
 func (p *PostUseCase) Create(request *model_request.CreatePostRequest) error {
-	tx, err := p.DB.CockroachdbOneDatabase.Connection.Begin()
+	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
 		panic(err)
@@ -53,7 +53,7 @@ func (p *PostUseCase) Create(request *model_request.CreatePostRequest) error {
 }
 
 func (p *PostUseCase) Get(request *model_request.GetPostRequest) (*response.PostResponse, error) {
-	tx, err := p.DB.CockroachdbOneDatabase.Connection.Begin()
+	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
 		panic(err)
