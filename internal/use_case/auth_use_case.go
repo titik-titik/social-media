@@ -7,6 +7,7 @@ import (
 	"social-media/internal/repository"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/guregu/null"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -41,6 +42,10 @@ func (authUseCase *AuthUseCase) Register(request *model_request.RegisterRequest)
 		}
 	}
 	newUser.Password = null.NewString(string(hashedPassword), true)
+
+	newUUID := uuid.New()
+
+	newUser.Id = null.NewString(newUUID.String(), true)
 
 	createdUser := authUseCase.AuthRepository.Register(newUser)
 	if createdUser == nil {
