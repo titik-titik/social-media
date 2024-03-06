@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"database/sql"
+	"fmt"
 	"social-media/internal/config"
 	"social-media/internal/entity"
 )
@@ -50,4 +52,22 @@ func (authRepository *AuthRepository) Register(toRegisterUser *entity.User) *ent
 	}
 
 	return createdUsers[0]
+}
+func (authRepository *AuthRepository) Login(email string) (*entity.User, error) {
+	var user entity.User
+
+	query := "SELECT id, username, email, password FROM \"user\" WHERE email = $1"
+
+	err := authRepository.DatabaseConfig.CockroachdbDatabase.Connection.QueryRow(query, email).Scan(
+		&user.Id, &user.Username, &user.Email, &user.Password,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no user found with email %s", email)
+		}
+		return nil, err
+	}
+
+	return &user, nil
 }
