@@ -5,26 +5,26 @@ import (
 	"social-media/test/mock"
 )
 
-type UserSeeder struct {
+type User struct {
 	UserMock       *mock.UserMock
 	UserRepository *repository.UserRepository
 }
 
-func NewUserSeeder(userRepository *repository.UserRepository) *UserSeeder {
-	userSeeder := &UserSeeder{
+func NewUser(userRepository *repository.UserRepository) *User {
+	userSeeder := &User{
 		UserMock:       mock.NewUserMock(),
 		UserRepository: userRepository,
 	}
 	return userSeeder
 }
 
-func (userSeeder *UserSeeder) Up() {
+func (userSeeder *User) Up() {
 	for _, user := range userSeeder.UserMock.Data {
 		userSeeder.UserRepository.CreateOne(user)
 	}
 }
 
-func (userSeeder *UserSeeder) Down() {
+func (userSeeder *User) Down() {
 	for _, user := range userSeeder.UserMock.Data {
 		userSeeder.UserRepository.DeleteOneById(user.Id.String)
 	}

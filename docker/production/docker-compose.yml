@@ -82,7 +82,7 @@ services:
     deploy:
       replicas: 1
     volumes:
-      - "../../db/cockroachdb_one/migration:/docker-entrypoint-initdb.d"
+      - "../../db/cockroachdb/migration:/docker-entrypoint-initdb.d"
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
