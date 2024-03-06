@@ -25,5 +25,5 @@ func (authController *AuthController) Register(writer http.ResponseWriter, reade
 		panic(decodeErr)
 	}
 	result := authController.AuthUseCase.Register(request)
-	model_response.NewResponse(writer, result.Message, result.Data, http.StatusOK)
+	model_response.NewResponse(writer, result.Message, result.Data, http.StatusCreated)
 }

@@ -11,6 +11,7 @@ import (
 
 	"testing"
 
+	"github.com/guregu/null"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,16 +35,14 @@ func (authWeb *AuthWeb) Register(t *testing.T) {
 	t.Parallel()
 
 	testWeb := GetTestWeb()
-	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	mockUser := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	mockAuth := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
 
-	bodyRequest := &model_request.RegisterRequest{
-		Username: mockUser.Username,
-		Email:    mockUser.Email,
-		Password: mockUser.Password,
-	}
+	bodyRequest := &model_request.RegisterRequest{}
+	bodyRequest.Username = null.NewString(mockAuth.Username.String, true)
+	bodyRequest.Email = null.NewString(mockAuth.Email.String, true)
+	bodyRequest.Password = null.NewString(mockAuth.Password.String, true)
 
 	bodyRequestJsonByte, marshalErr := json.Marshal(bodyRequest)
 	if marshalErr != nil {
@@ -71,6 +70,8 @@ func (authWeb *AuthWeb) Register(t *testing.T) {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, mockUser.Username, bodyResponse.Data.Username.String)
-	assert.Equal(t, mockUser.Email, bodyResponse.Data.Email.String)
+	assert.Equal(t, mockAuth.Username.String, bodyResponse.Data.Username.String)
+	assert.Equal(t, mockAuth.Email.String, bodyResponse.Data.Email.String)
+	newUserRow := bodyResponse.Data
+	testWeb.AllSeeder.UserSeeder.UserMock.Data = append(testWeb.AllSeeder.UserSeeder.UserMock.Data, newUserRow)
 }

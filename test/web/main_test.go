@@ -12,8 +12,8 @@ func Test(t *testing.T) {
 		t.Fatal(chdirErr)
 	}
 	fmt.Println("TestWeb started.")
-	userWeb := NewUserWeb(t)
-	userWeb.Start()
 	authWeb := NewAuthWeb(t)
 	authWeb.Start()
+	userWeb := NewUserWeb(t)
+	userWeb.Start()
 }
