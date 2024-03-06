@@ -36,7 +36,7 @@ func NewWebContainer() *WebContainer {
 	userRepository := repository.NewUserRepository(databaseConfig)
 	postRepository := repository.NewPostRepository()
 	authRepository := repository.NewAuthRepository(databaseConfig)
-	repositoryContainer := NewRepositoryContainer(userRepository, authRepository, searchRepository)
+	repositoryContainer := NewRepositoryContainer(userRepository, postRepository, authRepository, searchRepository)
 
 	searchUseCase := use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)

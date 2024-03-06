@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"social-media/internal/entity"
 	model_request "social-media/internal/model/request"
@@ -28,7 +29,7 @@ func NewAuthWeb(test *testing.T) *AuthWeb {
 	return authWeb
 }
 func (authWeb *AuthWeb) Start() {
-	authWeb.Test.Run("authWeb Register", authWeb.Register)
+	authWeb.Test.Run("AuthWeb_Register_Succeed", authWeb.Register)
 }
 
 func (authWeb *AuthWeb) Register(t *testing.T) {
@@ -37,7 +38,7 @@ func (authWeb *AuthWeb) Register(t *testing.T) {
 	testWeb := GetTestWeb()
 	defer testWeb.AllSeeder.Down()
 
-	mockAuth := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	mockAuth := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	bodyRequest := &model_request.RegisterRequest{}
 	bodyRequest.Username = null.NewString(mockAuth.Username.String, true)
@@ -72,6 +73,8 @@ func (authWeb *AuthWeb) Register(t *testing.T) {
 
 	assert.Equal(t, mockAuth.Username.String, bodyResponse.Data.Username.String)
 	assert.Equal(t, mockAuth.Email.String, bodyResponse.Data.Email.String)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(mockAuth.Password.String)))
+
 	newUserRow := bodyResponse.Data
-	testWeb.AllSeeder.UserSeeder.UserMock.Data = append(testWeb.AllSeeder.UserSeeder.UserMock.Data, newUserRow)
+	testWeb.AllSeeder.User.UserMock.Data = append(testWeb.AllSeeder.User.UserMock.Data, newUserRow)
 }

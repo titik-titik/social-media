@@ -5,26 +5,31 @@ import (
 )
 
 type AllSeeder struct {
-	UserSeeder *UserSeeder
+	User *User
+	Post *PostSeeder
 }
 
 func NewAllSeeder(
-	userSeeder *UserSeeder,
+	user *User,
+	post *PostSeeder,
 ) *AllSeeder {
 	allSeeder := &AllSeeder{
-		UserSeeder: userSeeder,
+		User: user,
+		Post: post,
 	}
 	return allSeeder
 }
 
-func (s *AllSeeder) Up() {
+func (allSeeder *AllSeeder) Up() {
 	fmt.Println("Seeder up started.")
-	s.UserSeeder.Up()
+	allSeeder.User.Up()
+	allSeeder.Post.Up()
 	fmt.Println("Seeder up finished.")
 }
 
-func (s *AllSeeder) Down() {
+func (allSeeder *AllSeeder) Down() {
 	fmt.Println("Seeder down started.")
-	s.UserSeeder.Down()
+	allSeeder.User.Down()
+	allSeeder.Post.Down()
 	fmt.Println("Seeder down finished.")
 }

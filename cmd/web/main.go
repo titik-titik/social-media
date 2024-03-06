@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"social-media/container"
-	redis_one "social-media/db/redis-one"
+	"social-media/db/redis"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		webContainer.Env.App.Host,
 		webContainer.Env.App.Port,
 	)
-	redisManager, err := redis_one.NewRedisConnection()
+	redisManager, err := redis.NewRedisConnection()
 	if err != nil {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}

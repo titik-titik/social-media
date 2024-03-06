@@ -3,7 +3,7 @@ package web
 import (
 	"net/http/httptest"
 	"social-media/container"
-	seeder "social-media/db/cockroachdb_one/seeder"
+	seeder "social-media/db/cockroachdb/seeder"
 )
 
 type TestWeb struct {
@@ -26,9 +26,11 @@ func NewTestWeb() *TestWeb {
 }
 
 func (web *TestWeb) GetAllSeeder() *seeder.AllSeeder {
-	userSeeder := seeder.NewUserSeeder(web.Container.Repository.User)
+	userSeeder := seeder.NewUser(web.Container.Repository.User)
+	postSeeder := seeder.NewPostSeeder(web.Container.Repository.Post)
 	seederConfig := seeder.NewAllSeeder(
 		userSeeder,
+		postSeeder,
 	)
 	return seederConfig
 }

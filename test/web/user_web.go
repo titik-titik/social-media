@@ -29,11 +29,11 @@ func NewUserWeb(test *testing.T) *UserWeb {
 }
 
 func (userWeb *UserWeb) Start() {
-	userWeb.Test.Run("UserWeb FindOneById", userWeb.FindOneById)
-	userWeb.Test.Run("UserWeb FindOneByEmail", userWeb.FindOneByEmail)
-	userWeb.Test.Run("UserWeb FindOneByUsername", userWeb.FindOneByUsername)
-	userWeb.Test.Run("UserWeb UserPatchOneByIdRequest", userWeb.PatchOneById)
-	userWeb.Test.Run("UserWeb DeleteOneById", userWeb.DeleteOneById)
+	userWeb.Test.Run("UserWeb_FindOneById_Succeed", userWeb.FindOneById)
+	userWeb.Test.Run("UserWeb_FindOneByEmail_Succeed", userWeb.FindOneByEmail)
+	userWeb.Test.Run("UserWeb_FindOneByUsername_Succeed", userWeb.FindOneByUsername)
+	userWeb.Test.Run("UserWeb_UserPatchOneByIdRequest_Succeed", userWeb.PatchOneById)
+	userWeb.Test.Run("UserWeb_DeleteOneById_Succeed", userWeb.DeleteOneById)
 }
 
 func (userWeb *UserWeb) FindOneById(t *testing.T) {
@@ -43,7 +43,7 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
@@ -77,7 +77,7 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	url := fmt.Sprintf("%s/%s?email=%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Email.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
@@ -108,7 +108,7 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	url := fmt.Sprintf("%s/%s?username=%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Username.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
@@ -139,7 +139,7 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	bodyRequest := &model_request.UserPatchOneByIdRequest{}
 	bodyRequest.Name = null.NewString(selectedUserData.Name.String+"patched", true)
@@ -190,7 +190,7 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.UserSeeder.UserMock.Data[0]
+	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodDelete, url, http.NoBody)
