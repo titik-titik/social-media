@@ -90,7 +90,7 @@ func (authUsecase *AuthUseCase) Login(request *model_request.LoginRequest) *mode
 
 	err = authUsecase.RedisManager.InsertData(accRedisKey, []byte(accToken), accExpiration)
 	if err != nil {
-		return model.NewTokenResult(http.StatusInternalServerError, "Failed to create access token", "")
+		return model.NewTokenResult(http.StatusInternalServerError, fmt.Sprintf("Failed to create access token: %v", err), "")
 	}
 
 	refToken := fmt.Sprintf("%s:%s", user.Id.String, uuid.New().String())
@@ -98,8 +98,7 @@ func (authUsecase *AuthUseCase) Login(request *model_request.LoginRequest) *mode
 	refRedisKey := "refresh_token"
 	err = authUsecase.RedisManager.InsertData(refRedisKey, []byte(refToken), refExpiration)
 	if err != nil {
-		return model.NewTokenResult(http.StatusInternalServerError, "Failed to create refresh token", "")
+		return model.NewTokenResult(http.StatusInternalServerError, fmt.Sprintf("Failed to create refresh token: %v", err), "")
 	}
-
 	return model.NewTokenResult(http.StatusOK, "Login successful", accToken)
 }
