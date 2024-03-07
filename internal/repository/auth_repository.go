@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"social-media/internal/config"
 	"social-media/internal/entity"
+	"time"
 )
 
 type AuthRepository struct {
@@ -53,7 +54,7 @@ func (authRepository *AuthRepository) Register(toRegisterUser *entity.User) *ent
 
 	return createdUsers[0]
 }
-func (authRepository *AuthRepository) Login(email string) (*entity.User, error) {
+func (authRepository *AuthRepository) CheckUser(email string) (*entity.User, error) {
 	var user entity.User
 
 	query := "SELECT id, username, email, password FROM \"user\" WHERE email = $1"
@@ -70,4 +71,29 @@ func (authRepository *AuthRepository) Login(email string) (*entity.User, error) 
 	}
 
 	return &user, nil
+}
+func (authRepository *AuthRepository) Login(id string, accToken string, accExpiration time.Time, refToken string, refExpiration time.Time) string {
+	begin, beginErr := authRepository.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
+		panic(beginErr)
+	}
+
+	_, queryErr := begin.Exec(
+		"INSERT INTO \"session\" (id, access_token, access_token_expired_at, refresh_token, refresh_token_expired_at) VALUES ($1, $2, $3, $4, $5);",
+		id,
+		accToken,
+		accExpiration,
+		refToken,
+		refExpiration,
+	)
+	if queryErr != nil {
+		panic(queryErr)
+	}
+
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		panic(commitErr)
+	}
+
+	return accToken
 }
