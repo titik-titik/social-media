@@ -27,12 +27,13 @@ func (authController *AuthController) Register(writer http.ResponseWriter, reade
 	result := authController.AuthUseCase.Register(request)
 	model_response.NewResponse(writer, result.Message, result.Data, http.StatusCreated)
 }
-func (authController *AuthController) Login(writer http.ResponseWriter, reader http.Request) {
-	request := &model_request.LoginRequest{}
-	decodeErr := json.NewDecoder(reader.Body).Decode(request)
-	if decodeErr != nil {
-		panic(decodeErr)
-	}
-	result := authController.AuthUseCase.Login(request)
-	model_response.NewResponse(writer, result.Message, result.Data, http.StatusOK)
-}
+
+//func (authController *AuthController) Login(writer http.ResponseWriter, reader http.Request) {
+//	request := &model_request.LoginRequest{}
+//	decodeErr := json.NewDecoder(reader.Body).Decode(request)
+//	if decodeErr != nil {
+//		panic(decodeErr)
+//	}
+//	result := authController.AuthUseCase.Login(request)
+//	model_response.NewResponse(writer, result.Message, result.Data, http.StatusOK)
+//}
