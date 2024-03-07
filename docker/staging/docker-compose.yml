@@ -32,10 +32,16 @@ services:
         nginx -t \
         && \
         nginx -g "daemon off;"
+    healthcheck:
+      test: service nginx status || exit 1
     depends_on:
       - app
       - redis-one
+      - redis-two
+      - redis-three
       - cockroachdb-one
+      - cockroachdb-two
+      - cockroachdb-three
   redis-one:
     image: redis:latest
     hostname: ${REDIS_ONE_HOST}
@@ -49,6 +55,32 @@ services:
         --cluster-enabled yes \
         --cluster-config-file nodes.conf \
         --cluster-node-timeout 5000
+  redis-two:
+    image: redis:latest
+    hostname: ${REDIS_TWO_HOST}
+    deploy:
+      replicas: 1
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        redis-server \
+        --requirepass ${REDIS_TWO_PASSWORD} \
+        --cluster-enabled yes \
+        --cluster-config-file nodes.conf \
+        --cluster-node-timeout 5000
+  redis-three:
+    image: redis:latest
+    hostname: ${REDIS_THREE_HOST}
+    deploy:
+      replicas: 1
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        redis-server \
+        --requirepass ${REDIS_THREE_PASSWORD} \
+        --cluster-enabled yes \
+        --cluster-config-file nodes.conf \
+        --cluster-node-timeout 5000
   redis-init:
     image: redis:latest
     deploy:
@@ -57,9 +89,13 @@ services:
     command:
       - |
         redis-cli \
+        --pass ${GATEWAY_REDIS_PASSWORD} \
         --cluster create \
         ${REDIS_ONE_HOST}:${GATEWAY_REDIS_PORT} \
-        --cluster-replicas 1
+        ${REDIS_TWO_HOST}:${GATEWAY_REDIS_PORT} \
+        ${REDIS_THREE_HOST}:${GATEWAY_REDIS_PORT} \
+        --cluster-replicas 0 \
+        --cluster-yes
     depends_on:
       - nginx-one
   cockroachdb-one:
@@ -75,7 +111,37 @@ services:
         --http-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_HTTP_PORT} \
         --listen-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} \
         --sql-addr=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_SQL_PORT} \
-        --join=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT} \
+        --join=${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT},${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_NODE_PORT},${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_NODE_PORT} \
+        --insecure
+  cockroachdb-two:
+    image: cockroachdb/cockroach:latest
+    hostname: ${COCKROACHDB_TWO_HOST}
+    deploy:
+      replicas: 1
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        cockroach start \
+        --advertise-addr=${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_NODE_PORT} \
+        --http-addr=${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_HTTP_PORT} \
+        --listen-addr=${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_NODE_PORT} \
+        --sql-addr=${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_SQL_PORT} \
+        --join=${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_NODE_PORT},${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT},${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_NODE_PORT} \
+        --insecure
+  cockroachdb-three:
+    image: cockroachdb/cockroach:latest
+    hostname: ${COCKROACHDB_THREE_HOST}
+    deploy:
+      replicas: 1
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        cockroach start \
+        --advertise-addr=${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_NODE_PORT} \
+        --http-addr=${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_HTTP_PORT} \
+        --listen-addr=${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_NODE_PORT} \
+        --sql-addr=${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_SQL_PORT} \
+        --join=${COCKROACHDB_THREE_HOST}:${COCKROACHDB_THREE_NODE_PORT},${COCKROACHDB_ONE_HOST}:${COCKROACHDB_ONE_NODE_PORT},${COCKROACHDB_TWO_HOST}:${COCKROACHDB_TWO_NODE_PORT} \
         --insecure
   cockroachdb-init:
     image: cockroachdb/cockroach:latest
@@ -86,7 +152,7 @@ services:
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
-        cockroach init --host=${GATEWAY_HOST}:${COCKROACHDB_ONE_NODE_PORT} --insecure \
+        cockroach init --host=${GATEWAY_HOST}:${GATEWAY_COCKROACHDB_NODE_PORT} --insecure \
         && \
         cockroach sql --host=${GATEWAY_HOST}:${GATEWAY_COCKROACHDB_SQL_PORT} --insecure \
         --execute="CREATE ROLE IF NOT EXISTS \"${GATEWAY_COCKROACHDB_USER}\" WITH LOGIN;" \
