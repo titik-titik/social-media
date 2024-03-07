@@ -52,7 +52,7 @@ func (rm *RedisManager) InsertData(redisKey string, data []byte, expirationTime 
 	expirationDuration := time.Until(expirationTime)
 	err := rm.Client.SetEx(ctx, redisKey, data, expirationDuration).Err()
 	if err != nil {
-		return fmt.Errorf("error setting data to cache: %w", err)
+		return fmt.Errorf("error setting data to redis: %w", err)
 	}
 	return nil
 }
