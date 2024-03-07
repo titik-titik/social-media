@@ -2,6 +2,7 @@ package container
 
 import (
 	"fmt"
+	"social-media/db/redis"
 	"social-media/internal/config"
 	http_delivery "social-media/internal/delivery/http"
 	"social-media/internal/delivery/http/route"
@@ -19,6 +20,7 @@ type WebContainer struct {
 	UseCase    *UseCaseContainer
 	Controller *ControllerContainer
 	Route      *route.RootRoute
+	Redis      *redis.RedisManager
 }
 
 func NewWebContainer() *WebContainer {
@@ -37,10 +39,11 @@ func NewWebContainer() *WebContainer {
 	postRepository := repository.NewPostRepository()
 	authRepository := repository.NewAuthRepository(databaseConfig)
 	repositoryContainer := NewRepositoryContainer(userRepository, postRepository, authRepository, searchRepository)
+	redisManager := redis.NewRedisManager()
 
 	searchUseCase := use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)
-	authUseCase := use_case.NewAuthUseCase(authRepository)
+	authUseCase := use_case.NewAuthUseCase(authRepository, redisManager)
 	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
 	useCaseContainer := NewUseCaseContainer(userUseCase, authUseCase, searchUseCase)
 
@@ -71,6 +74,7 @@ func NewWebContainer() *WebContainer {
 		UseCase:    useCaseContainer,
 		Controller: controllerContainer,
 		Route:      rootRoute,
+		Redis:      redisManager,
 	}
 
 	return webContainer

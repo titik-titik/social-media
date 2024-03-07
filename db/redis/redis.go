@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -14,9 +15,9 @@ type RedisManager struct {
 	Client *redis.Client
 }
 
-func NewRedisConnection() (*RedisManager, error) {
+func NewRedisManager() *RedisManager {
 	if err := godotenv.Load(); err != nil {
-		return nil, fmt.Errorf("error loading .env file: %w", err)
+		log.Fatalf("error loading .env file: %v", err)
 	}
 
 	redisHost := os.Getenv("REDIS_ONE_HOST")
@@ -30,15 +31,13 @@ func NewRedisConnection() (*RedisManager, error) {
 	})
 
 	ctx := context.Background()
-	_, err := client.Ping(ctx).Result()
-	if err != nil {
-		client.Close()
-		return nil, fmt.Errorf("error connecting to Redis: %w", err)
+	if _, err := client.Ping(ctx).Result(); err != nil {
+		log.Fatalf("error connecting to Redis: %v", err)
 	}
 
 	fmt.Printf("Connected to Redis at: %s\n", redisAddr)
 
-	return &RedisManager{Client: client}, nil
+	return &RedisManager{Client: client}
 }
 
 func (rm *RedisManager) Close() error {
