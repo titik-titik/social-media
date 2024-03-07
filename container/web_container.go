@@ -43,7 +43,7 @@ func NewWebContainer() *WebContainer {
 
 	searchUseCase := use_case.NewSearchUseCase(searchRepository)
 	userUseCase := use_case.NewUserUseCase(userRepository)
-	authUseCase := use_case.NewAuthUseCase(authRepository, redisManager)
+	authUseCase := use_case.NewAuthUseCase(authRepository)
 	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
 	useCaseContainer := NewUseCaseContainer(userUseCase, authUseCase, searchUseCase)
 
