@@ -42,8 +42,8 @@ func NewEnvConfig() *EnvConfig {
 		},
 		RedisOne: &RedisOneEnv{
 			Host:     os.Getenv("GATEWAY_HOST"),
-			Port:     os.Getenv("REDIS_GATEWAY_PORT"),
-			Password: os.Getenv("REDIS_GATEWAY_PASSWORD"),
+			Port:     os.Getenv("GATEWAY_REDIS_PORT"),
+			Password: os.Getenv("GATEWAY_REDIS__PASSWORD"),
 		},
 	}
 	return envConfig
