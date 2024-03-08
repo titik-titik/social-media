@@ -1,27 +1,28 @@
 package config
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
-	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"time"
 )
 
 type DatabaseConfig struct {
-	CockroachdbDatabase *CockroachdbDatabase
+	CockroachDatabase *CockroachDatabase
 }
 
-type CockroachdbDatabase struct {
-	Connection *sql.DB
+type CockroachDatabase struct {
+	Pool *pgxpool.Pool
 }
 
 func NewDatabaseConfig(envConfig *EnvConfig) *DatabaseConfig {
 	databaseConfig := &DatabaseConfig{
-		CockroachdbDatabase: NewCockroachdbDatabase(envConfig),
+		CockroachDatabase: NewCockroachdbDatabase(envConfig),
 	}
 	return databaseConfig
 }
 
-func NewCockroachdbDatabase(envConfig *EnvConfig) *CockroachdbDatabase {
+func NewCockroachdbDatabase(envConfig *EnvConfig) *CockroachDatabase {
 	var url string
 	if envConfig.Cockroachdb.Password == "" {
 		url = fmt.Sprintf(
@@ -41,16 +42,16 @@ func NewCockroachdbDatabase(envConfig *EnvConfig) *CockroachdbDatabase {
 		)
 	}
 
-	connection, err := sql.Open(
-		"pgx",
-		url,
-	)
-	if err != nil {
-		panic(err)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	pool, poolErr := pgxpool.New(ctx, url)
+
+	if poolErr != nil {
+		panic(poolErr)
 	}
 
-	cockroachdbDatabase := &CockroachdbDatabase{
-		Connection: connection,
+	cockroachdbDatabase := &CockroachDatabase{
+		Pool: pool,
 	}
 
 	return cockroachdbDatabase

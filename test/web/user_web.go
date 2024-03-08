@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"testing"
+	"time"
 
 	"github.com/guregu/null"
 	"github.com/stretchr/testify/assert"
@@ -200,13 +202,16 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	t.Parallel()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	testWeb := GetTestWeb()
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
 	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
-	userSessions := []*entity.Session{}
+	var userSessions []*entity.Session
 	for _, session := range testWeb.AllSeeder.Session.SessionMock.Data {
 		if session.UserId == selectedUserMock.Id {
 			userSessions = append(userSessions, session)
@@ -214,17 +219,17 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	}
 
 	for _, userSession := range userSessions {
-		begin, beginErr := testWeb.Container.Database.CockroachdbDatabase.Connection.Begin()
+		begin, beginErr := testWeb.Container.Database.CockroachDatabase.Pool.Begin(ctx)
 		if beginErr != nil {
 			t.Fatal(beginErr)
 		}
 
-		_, deleteSessionErr := begin.Exec("DELETE FROM \"session\" WHERE id = $1 LIMIT 1;", userSession.Id)
+		_, deleteSessionErr := begin.Query(ctx, "DELETE FROM \"session\" WHERE id = $1 LIMIT 1;", userSession.Id)
 		if deleteSessionErr != nil {
 			t.Fatal(deleteSessionErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := begin.Commit(ctx)
 		if commitErr != nil {
 			t.Fatal(commitErr)
 		}
@@ -238,17 +243,17 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	}
 
 	for _, userPost := range userPosts {
-		begin, beginErr := testWeb.Container.Database.CockroachdbDatabase.Connection.Begin()
+		begin, beginErr := testWeb.Container.Database.CockroachDatabase.Pool.Begin(ctx)
 		if beginErr != nil {
 			t.Fatal(beginErr)
 		}
 
-		_, deletePostErr := begin.Exec("DELETE FROM \"post\" WHERE id = $1 LIMIT 1;", userPost.Id)
+		_, deletePostErr := begin.Query(ctx, "DELETE FROM \"post\" WHERE id = $1 LIMIT 1;", userPost.Id)
 		if deletePostErr != nil {
 			t.Fatal(deletePostErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := begin.Commit(ctx)
 		if commitErr != nil {
 			t.Fatal(commitErr)
 		}

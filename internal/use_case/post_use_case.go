@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"context"
 	"fmt"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -27,7 +28,11 @@ func NewPostUseCase(db *config.DatabaseConfig, postRepository *repository.PostRe
 }
 
 func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error {
-	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, err := p.DB.CockroachDatabase.Pool.Acquire(ctx)
+	defer connection.Release()
+	tx, err := connection.Begin(ctx)
 
 	if err != nil {
 		panic(err)
@@ -46,7 +51,7 @@ func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error 
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		panic(err)
 	}
 
@@ -54,7 +59,11 @@ func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error 
 }
 
 func (p *PostUseCase) Get(request *model_controller.GetPostRequest) (*response.PostResponse, error) {
-	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, err := p.DB.CockroachDatabase.Pool.Acquire(ctx)
+	defer connection.Release()
+	tx, err := connection.Begin(ctx)
 
 	if err != nil {
 		panic(err)
@@ -67,7 +76,7 @@ func (p *PostUseCase) Get(request *model_controller.GetPostRequest) (*response.P
 		return nil, err
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		panic(err)
 	}
 

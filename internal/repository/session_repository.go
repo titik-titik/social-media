@@ -1,8 +1,10 @@
 package repository
 
 import (
-	"database/sql"
+	"context"
+	"github.com/jackc/pgx/v5"
 	"social-media/internal/entity"
+	"time"
 )
 
 type SessionRepository struct {
@@ -13,31 +15,19 @@ func NewSessionRepository() *SessionRepository {
 	return sessionRepository
 }
 
-func DeserializeSessionRows(rows *sql.Rows) []*entity.Session {
-	var foundSessions []*entity.Session
-	for rows.Next() {
-		foundSession := &entity.Session{}
-		scanErr := rows.Scan(
-			&foundSession.Id,
-			&foundSession.UserId,
-			&foundSession.AccessToken,
-			&foundSession.RefreshToken,
-			&foundSession.AccessTokenExpiredAt,
-			&foundSession.RefreshTokenExpiredAt,
-			&foundSession.CreatedAt,
-			&foundSession.UpdatedAt,
-			&foundSession.DeletedAt,
-		)
-		if scanErr != nil {
-			panic(scanErr)
-		}
-		foundSessions = append(foundSessions, foundSession)
+func DeserializeSessionRows(rows pgx.Rows) []*entity.Session {
+	foundSessions, collectRowErr := pgx.CollectRows(rows, pgx.RowToStructByName[*entity.Session])
+	if collectRowErr != nil {
+		panic(collectRowErr)
 	}
 	return foundSessions
 }
 
-func (sessionRepository *SessionRepository) FindOneById(begin *sql.Tx, id string) *entity.Session {
+func (sessionRepository *SessionRepository) FindOneById(begin pgx.Tx, id string) *entity.Session {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM \"session\" WHERE id=$1 LIMIT 1;",
 		id,
 	)
@@ -53,8 +43,11 @@ func (sessionRepository *SessionRepository) FindOneById(begin *sql.Tx, id string
 	return foundSessions[0]
 }
 
-func (sessionRepository *SessionRepository) FindOneByUserId(begin *sql.Tx, userId string) *entity.Session {
+func (sessionRepository *SessionRepository) FindOneByUserId(begin pgx.Tx, userId string) *entity.Session {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM \"session\" WHERE user_id=$1 LIMIT 1;",
 		userId,
 	)
@@ -70,8 +63,11 @@ func (sessionRepository *SessionRepository) FindOneByUserId(begin *sql.Tx, userI
 	return foundSessions[0]
 }
 
-func (sessionRepository *SessionRepository) CreateOne(begin *sql.Tx, toCreateSession *entity.Session) *entity.Session {
+func (sessionRepository *SessionRepository) CreateOne(begin pgx.Tx, toCreateSession *entity.Session) *entity.Session {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	_, queryErr := begin.Query(
+		ctx,
 		"INSERT INTO \"session\" (id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);",
 		toCreateSession.Id,
 		toCreateSession.UserId,
@@ -90,71 +86,45 @@ func (sessionRepository *SessionRepository) CreateOne(begin *sql.Tx, toCreateSes
 	return toCreateSession
 }
 
-func (sessionRepository *SessionRepository) PatchOneById(begin *sql.Tx, id string, toPatchSession *entity.Session) *entity.Session {
-	foundRows, foundRowsErr := begin.Query(
-		"SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM \"session\" WHERE id=$1 LIMIT 1;",
-		id,
-	)
-	if foundRowsErr != nil {
-		panic(foundRowsErr)
-	}
-
-	foundSessions := DeserializeSessionRows(foundRows)
-	if len(foundSessions) == 0 {
-		return nil
-	}
-
-	foundSession := foundSessions[0]
-	foundSession.Id = toPatchSession.Id
-	foundSession.UserId = toPatchSession.UserId
-	foundSession.AccessToken = toPatchSession.AccessToken
-	foundSession.RefreshToken = toPatchSession.RefreshToken
-	foundSession.AccessTokenExpiredAt = toPatchSession.AccessTokenExpiredAt
-	foundSession.RefreshTokenExpiredAt = toPatchSession.RefreshTokenExpiredAt
-	foundSession.CreatedAt = toPatchSession.CreatedAt
-	foundSession.UpdatedAt = toPatchSession.UpdatedAt
-	foundSession.DeletedAt = toPatchSession.DeletedAt
-
+func (sessionRepository *SessionRepository) PatchOneById(begin pgx.Tx, id string, toPatchSession *entity.Session) *entity.Session {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	_, queryErr := begin.Query(
+		ctx,
 		"UPDATE \"session\" SET id=$1, user_id=$2, access_token=$3, refresh_token=$4, access_token_expired_at=$5, refresh_token_expired_at=$6, created_at=$7, updated_at=$8, deleted_at=$9 WHERE id=$10 LIMIT 1;",
-		foundSession.Id,
-		foundSession.UserId,
-		foundSession.AccessToken,
-		foundSession.RefreshToken,
-		foundSession.AccessTokenExpiredAt,
-		foundSession.RefreshTokenExpiredAt,
-		foundSession.CreatedAt,
-		foundSession.UpdatedAt,
-		foundSession.DeletedAt,
+		toPatchSession.Id,
+		toPatchSession.UserId,
+		toPatchSession.AccessToken,
+		toPatchSession.RefreshToken,
+		toPatchSession.AccessTokenExpiredAt,
+		toPatchSession.RefreshTokenExpiredAt,
+		toPatchSession.CreatedAt,
+		toPatchSession.UpdatedAt,
+		toPatchSession.DeletedAt,
 		id,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
 
-	return foundSession
+	return toPatchSession
 }
 
-func (sessionRepository *SessionRepository) DeleteOneById(begin *sql.Tx, id string) *entity.Session {
-	foundRows, foundRowsErr := begin.Query(
-		"SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM \"session\" WHERE id=$1 LIMIT 1;",
-		id,
-	)
-	if foundRowsErr != nil {
-		panic(foundRowsErr)
-	}
-
-	foundSessions := DeserializeSessionRows(foundRows)
-	if len(foundSessions) == 0 {
-		return nil
-	}
-
-	_, queryErr := begin.Query(
-		"DELETE FROM \"session\" WHERE id=$1",
+func (sessionRepository *SessionRepository) DeleteOneById(begin pgx.Tx, id string) *entity.Session {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	rows, queryErr := begin.Query(
+		ctx,
+		"DELETE FROM \"session\" WHERE id=$1 LIMIT 1 RETURNING id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at;",
 		id,
 	)
 	if queryErr != nil {
 		panic(queryErr)
+	}
+
+	foundSessions := DeserializeSessionRows(rows)
+	if len(foundSessions) == 0 {
+		return nil
 	}
 
 	return foundSessions[0]

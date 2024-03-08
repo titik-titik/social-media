@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"context"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -34,7 +35,18 @@ func NewAuthUseCase(
 }
 
 func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) *model.Result[*entity.User] {
-	begin, beginErr := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := authUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Register is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -67,7 +79,7 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 
 	createdUser := authUseCase.UserRepository.CreateOne(begin, newUser)
 	if createdUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -90,7 +102,18 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 }
 
 func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *model.Result[*entity.Session] {
-	begin, beginErr := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := authUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Login is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
@@ -101,7 +124,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *m
 
 	selectedUser := authUseCase.UserRepository.FindOneByEmail(begin, request.Email.String)
 	if selectedUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.Session]{
 				Code:    http.StatusInternalServerError,
@@ -141,7 +164,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *m
 		updatedSession := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
 
 		if updatedSession == nil {
-			rollbackEr := begin.Rollback()
+			rollbackEr := begin.Rollback(ctx)
 			if rollbackEr != nil {
 				return &model.Result[*entity.Session]{
 					Code:    http.StatusInternalServerError,
@@ -177,7 +200,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *m
 
 	createdSession := authUseCase.SessionRepository.CreateOne(begin, newSession)
 	if createdSession == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.Session]{
 				Code:    http.StatusInternalServerError,

@@ -1,8 +1,10 @@
 package repository
 
 import (
-	"database/sql"
+	"context"
+	"github.com/jackc/pgx/v5"
 	"social-media/internal/entity"
+	"time"
 )
 
 type UserRepository struct {
@@ -13,33 +15,19 @@ func NewUserRepository() *UserRepository {
 	return userRepository
 }
 
-func DeserializeUserRows(rows *sql.Rows) []*entity.User {
-	var foundUsers []*entity.User
-	for rows.Next() {
-		foundUser := &entity.User{}
-		scanErr := rows.Scan(
-			&foundUser.Id,
-			&foundUser.Name,
-			&foundUser.Username,
-			&foundUser.Email,
-			&foundUser.Password,
-			&foundUser.AvatarUrl,
-			&foundUser.Bio,
-			&foundUser.IsVerified,
-			&foundUser.CreatedAt,
-			&foundUser.UpdatedAt,
-			&foundUser.DeletedAt,
-		)
-		if scanErr != nil {
-			panic(scanErr)
-		}
-		foundUsers = append(foundUsers, foundUser)
+func DeserializeUserRows(rows pgx.Rows) []*entity.User {
+	foundUsers, collectRowErr := pgx.CollectRows(rows, pgx.RowToStructByName[*entity.User])
+	if collectRowErr != nil {
+		panic(collectRowErr)
 	}
 	return foundUsers
 }
 
-func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) *entity.User {
+func (userRepository *UserRepository) FindOneById(begin pgx.Tx, id string) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE id=$1 LIMIT 1;",
 		id,
 	)
@@ -55,8 +43,11 @@ func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) *ent
 	return foundUsers[0]
 }
 
-func (userRepository *UserRepository) FindOneByUsername(begin *sql.Tx, username string) *entity.User {
+func (userRepository *UserRepository) FindOneByUsername(begin pgx.Tx, username string) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 LIMIT 1;",
 		username,
 	)
@@ -72,8 +63,11 @@ func (userRepository *UserRepository) FindOneByUsername(begin *sql.Tx, username 
 	return foundUsers[0]
 }
 
-func (userRepository *UserRepository) FindOneByEmail(begin *sql.Tx, email string) *entity.User {
+func (userRepository *UserRepository) FindOneByEmail(begin pgx.Tx, email string) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 LIMIT 1;",
 		email,
 	)
@@ -89,8 +83,11 @@ func (userRepository *UserRepository) FindOneByEmail(begin *sql.Tx, email string
 	return foundUsers[0]
 }
 
-func (userRepository *UserRepository) FindOneByEmailAndPassword(begin *sql.Tx, email string, password string) *entity.User {
+func (userRepository *UserRepository) FindOneByEmailAndPassword(begin pgx.Tx, email string, password string) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 AND password=$2 LIMIT 1;",
 		email,
 		password,
@@ -107,8 +104,11 @@ func (userRepository *UserRepository) FindOneByEmailAndPassword(begin *sql.Tx, e
 	return foundUsers[0]
 }
 
-func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin *sql.Tx, username string, password string) *entity.User {
+func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin pgx.Tx, username string, password string) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	rows, queryErr := begin.Query(
+		ctx,
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 AND password=$2 LIMIT 1;",
 		username,
 		password,
@@ -125,8 +125,11 @@ func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin *sql.Tx
 	return foundUsers[0]
 }
 
-func (userRepository *UserRepository) CreateOne(begin *sql.Tx, toCreateUser *entity.User) *entity.User {
+func (userRepository *UserRepository) CreateOne(begin pgx.Tx, toCreateUser *entity.User) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	_, queryErr := begin.Query(
+		ctx,
 		"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
 		toCreateUser.Id,
 		toCreateUser.Name,
@@ -147,8 +150,11 @@ func (userRepository *UserRepository) CreateOne(begin *sql.Tx, toCreateUser *ent
 	return toCreateUser
 }
 
-func (userRepository *UserRepository) PatchOneById(begin *sql.Tx, id string, toPatchUser *entity.User) *entity.User {
+func (userRepository *UserRepository) PatchOneById(begin pgx.Tx, id string, toPatchUser *entity.User) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	_, queryErr := begin.Query(
+		ctx,
 		"UPDATE \"user\" SET id=$1, name=$2, username=$3, email=$4, password=$5, avatar_url=$6, bio=$7, is_verified=$8, created_at=$9, updated_at=$10, deleted_at=$11 WHERE id = $12 LIMIT 1;",
 		toPatchUser.Id,
 		toPatchUser.Name,
@@ -170,16 +176,19 @@ func (userRepository *UserRepository) PatchOneById(begin *sql.Tx, id string, toP
 	return toPatchUser
 }
 
-func (userRepository *UserRepository) DeleteOneById(begin *sql.Tx, id string) *entity.User {
-	deletedUser, deletedUserQueryErr := begin.Query(
+func (userRepository *UserRepository) DeleteOneById(begin pgx.Tx, id string) *entity.User {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	rows, queryErr := begin.Query(
+		ctx,
 		"DELETE FROM \"user\" WHERE id=$1 LIMIT 1 RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at;",
 		id,
 	)
-	if deletedUserQueryErr != nil {
-		panic(deletedUserQueryErr)
+	if queryErr != nil {
+		panic(queryErr)
 	}
 
-	foundUsers := DeserializeUserRows(deletedUser)
+	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
 		return nil
 	}

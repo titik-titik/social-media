@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"context"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -30,7 +31,18 @@ func NewUserUseCase(
 }
 
 func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneById is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -41,7 +53,7 @@ func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.Use
 
 	foundUser := userUseCase.UserRepository.FindOneById(begin, id)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -56,7 +68,7 @@ func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.Use
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -73,7 +85,18 @@ func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.Use
 }
 
 func (userUseCase *UserUseCase) FindOneByUsername(username string) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByUsername is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -84,7 +107,7 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) *model.Result
 
 	foundUser := userUseCase.UserRepository.FindOneByUsername(begin, username)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -98,7 +121,7 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) *model.Result
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -115,7 +138,18 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) *model.Result
 }
 
 func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByEmail is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -126,7 +160,7 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*enti
 
 	foundUser := userUseCase.UserRepository.FindOneByEmail(begin, email)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -141,7 +175,7 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*enti
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -158,7 +192,18 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*enti
 }
 
 func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByEmailAndPassword is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -169,7 +214,7 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 
 	foundUser := userUseCase.UserRepository.FindOneByEmailAndPassword(begin, email, password)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -184,7 +229,7 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -201,7 +246,17 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 }
 
 func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password string) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByUsernameAndPassword is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -212,7 +267,7 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 
 	foundUser := userUseCase.UserRepository.FindOneByUsernameAndPassword(begin, username, password)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -227,7 +282,7 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -244,7 +299,17 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 }
 
 func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase CreateOne is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -255,7 +320,7 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) *model.Resu
 
 	createdUser := userUseCase.UserRepository.CreateOne(begin, toCreateUser)
 	if createdUser == nil {
-		rollbackErr := begin.Rollback()
+		rollbackErr := begin.Rollback(ctx)
 		if rollbackErr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -270,7 +335,7 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) *model.Resu
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -287,7 +352,18 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) *model.Resu
 }
 
 func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase PatchOneById is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -298,7 +374,7 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 
 	patchedUser := userUseCase.UserRepository.PatchOneById(begin, id, toPatchUser)
 	if patchedUser == nil {
-		rollbackErr := begin.Rollback()
+		rollbackErr := begin.Rollback(ctx)
 		if rollbackErr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -313,7 +389,7 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -330,7 +406,18 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 }
 
 func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *model_request.UserPatchOneByIdRequest) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase PatchOneByIdFromRequest is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -341,7 +428,7 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 
 	foundUser := userUseCase.UserRepository.FindOneById(begin, id)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -387,7 +474,7 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 
 	patchedUser := userUseCase.UserRepository.PatchOneById(begin, id, foundUser)
 	if patchedUser == nil {
-		rollbackErr := begin.Rollback()
+		rollbackErr := begin.Rollback(ctx)
 		if rollbackErr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -402,7 +489,7 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -419,7 +506,18 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 }
 
 func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.User] {
-	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := userUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase DeleteOneById is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -430,7 +528,7 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.U
 
 	foundUser := userUseCase.UserRepository.FindOneById(begin, id)
 	if foundUser == nil {
-		rollbackEr := begin.Rollback()
+		rollbackEr := begin.Rollback(ctx)
 		if rollbackEr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -447,7 +545,7 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.U
 
 	deletedUser := userUseCase.UserRepository.DeleteOneById(begin, id)
 	if deletedUser == nil {
-		rollbackErr := begin.Rollback()
+		rollbackErr := begin.Rollback(ctx)
 		if rollbackErr != nil {
 			return &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
@@ -462,7 +560,7 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.U
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,

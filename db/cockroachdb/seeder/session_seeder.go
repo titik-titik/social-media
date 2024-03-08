@@ -1,8 +1,10 @@
 package seeder
 
 import (
+	"context"
 	"social-media/internal/config"
 	"social-media/test/mock"
+	"time"
 )
 
 type SessionSeeder struct {
@@ -22,13 +24,20 @@ func NewSessionSeeder(
 }
 
 func (sessionSeeder *SessionSeeder) Up() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	for _, session := range sessionSeeder.SessionMock.Data {
-		begin, beginErr := sessionSeeder.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		connection, acquireErr := sessionSeeder.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+		if acquireErr != nil {
+			panic(acquireErr)
+		}
+		begin, beginErr := connection.Begin(ctx)
 		if beginErr != nil {
 			panic(beginErr)
 		}
 
-		_, err := begin.Query(
+		_, queryErr := begin.Query(
+			ctx,
 			"INSERT INTO \"session\" (id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);",
 			session.Id,
 			session.UserId,
@@ -40,35 +49,46 @@ func (sessionSeeder *SessionSeeder) Up() {
 			session.UpdatedAt,
 			session.DeletedAt,
 		)
-		if err != nil {
-			panic(err)
+		if queryErr != nil {
+			panic(queryErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := begin.Commit(ctx)
 		if commitErr != nil {
 			panic(commitErr)
 		}
+
+		connection.Release()
 	}
 }
 
 func (sessionSeeder *SessionSeeder) Down() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	for _, session := range sessionSeeder.SessionMock.Data {
-		begin, beginErr := sessionSeeder.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		connection, acquireErr := sessionSeeder.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+		if acquireErr != nil {
+			panic(acquireErr)
+		}
+		begin, beginErr := connection.Begin(ctx)
 		if beginErr != nil {
 			panic(beginErr)
 		}
 
-		_, err := begin.Query(
+		_, queryErr := begin.Query(
+			ctx,
 			"DELETE FROM \"session\" WHERE id = $1 LIMIT 1;",
 			session.Id,
 		)
-		if err != nil {
-			panic(err)
+		if queryErr != nil {
+			panic(queryErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := begin.Commit(ctx)
 		if commitErr != nil {
 			panic(commitErr)
 		}
+
+		connection.Release()
 	}
 }

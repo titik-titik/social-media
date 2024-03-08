@@ -1,11 +1,13 @@
 package use_case
 
 import (
+	"context"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
 	"social-media/internal/model"
 	"social-media/internal/repository"
+	"time"
 )
 
 type SearchUseCase struct {
@@ -25,7 +27,18 @@ func NewSearchUseCase(
 }
 
 func (searchUseCase *SearchUseCase) FindAllUser() *model.Result[[]*entity.User] {
-	begin, beginErr := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := searchUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[[]*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "SearchUserCase FindAllUser is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[[]*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -44,7 +57,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() *model.Result[[]*entity.User] 
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[[]*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -61,7 +74,18 @@ func (searchUseCase *SearchUseCase) FindAllUser() *model.Result[[]*entity.User] 
 }
 
 func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) *model.Result[[]*entity.Post] {
-	begin, beginErr := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	connection, acquireErr := searchUseCase.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+	if acquireErr != nil {
+		return &model.Result[[]*entity.Post]{
+			Code:    http.StatusInternalServerError,
+			Message: "SearchPostCase FindAllPostByUserId is failed, connection acquire is failed.",
+			Data:    nil,
+		}
+	}
+	defer connection.Release()
+	begin, beginErr := connection.Begin(ctx)
 	if beginErr != nil {
 		return &model.Result[[]*entity.Post]{
 			Code:    http.StatusInternalServerError,
@@ -80,7 +104,7 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) *model.Result
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := begin.Commit(ctx)
 	if commitErr != nil {
 		return &model.Result[[]*entity.Post]{
 			Code:    http.StatusInternalServerError,

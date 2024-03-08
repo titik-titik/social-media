@@ -1,10 +1,12 @@
 package seeder
 
 import (
+	"context"
 	"github.com/guregu/null"
 	"golang.org/x/crypto/bcrypt"
 	"social-media/internal/config"
 	"social-media/test/mock"
+	"time"
 )
 
 type UserSeeder struct {
@@ -23,17 +25,24 @@ func NewUserSeeder(
 }
 
 func (userSeeder *UserSeeder) Up() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	for _, user := range userSeeder.UserMock.Data {
 		hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(user.Password.String), bcrypt.DefaultCost)
 		if hashedPasswordErr != nil {
 			panic(hashedPasswordErr)
 		}
 		password := null.NewString(string(hashedPassword), true)
-		begin, beginErr := userSeeder.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		connection, acquireErr := userSeeder.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+		if acquireErr != nil {
+			panic(acquireErr)
+		}
+		begin, beginErr := connection.Begin(ctx)
 		if beginErr != nil {
 			panic(beginErr)
 		}
 		_, err := begin.Query(
+			ctx,
 			"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
 			user.Id,
 			user.Name,
@@ -50,29 +59,43 @@ func (userSeeder *UserSeeder) Up() {
 		if err != nil {
 			panic(err)
 		}
-		commitErr := begin.Commit()
+
+		commitErr := begin.Commit(ctx)
 		if commitErr != nil {
 			panic(commitErr)
 		}
+
+		connection.Release()
 	}
 }
 
 func (userSeeder *UserSeeder) Down() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	for _, user := range userSeeder.UserMock.Data {
-		begin, beginErr := userSeeder.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		connection, acquireErr := userSeeder.DatabaseConfig.CockroachDatabase.Pool.Acquire(ctx)
+		if acquireErr != nil {
+			panic(acquireErr)
+		}
+		begin, beginErr := connection.Begin(ctx)
 		if beginErr != nil {
 			panic(beginErr)
 		}
-		_, err := begin.Query(
+
+		_, queryErr := begin.Query(
+			ctx,
 			"DELETE FROM \"user\" WHERE id = $1 LIMIT 1;",
 			user.Id,
 		)
-		if err != nil {
-			panic(err)
+		if queryErr != nil {
+			panic(queryErr)
 		}
-		commitErr := begin.Commit()
+
+		commitErr := begin.Commit(ctx)
 		if commitErr != nil {
 			panic(commitErr)
 		}
+
+		connection.Release()
 	}
 }
