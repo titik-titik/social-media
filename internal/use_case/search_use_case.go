@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -44,7 +45,10 @@ func (searchUseCase *SearchUseCase) FindAllUser() *model.Result[[]*entity.User] 
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[[]*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -80,7 +84,10 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) *model.Result
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[[]*entity.Post]{
 			Code:    http.StatusInternalServerError,

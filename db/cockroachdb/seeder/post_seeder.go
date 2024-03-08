@@ -1,6 +1,7 @@
 package seeder
 
 import (
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"social-media/internal/config"
 	"social-media/test/mock"
 )
@@ -28,21 +29,27 @@ func (postSeeder *PostSeeder) Up() {
 			panic(beginErr)
 		}
 
-		_, err := begin.Query(
-			"INSERT INTO \"post\" (id, user_id, image_url, description, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7);",
-			post.Id,
-			post.UserId,
-			post.ImageUrl,
-			post.Description,
-			post.CreatedAt,
-			post.UpdatedAt,
-			post.DeletedAt,
-		)
-		if err != nil {
-			panic(err)
+		queryErr := crdb.Execute(func() (err error) {
+			_, err = begin.Query(
+				"INSERT INTO \"post\" (id, user_id, image_url, description, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7);",
+				post.Id,
+				post.UserId,
+				post.ImageUrl,
+				post.Description,
+				post.CreatedAt,
+				post.UpdatedAt,
+				post.DeletedAt,
+			)
+			return err
+		})
+		if queryErr != nil {
+			panic(queryErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
 		if commitErr != nil {
 			panic(commitErr)
 		}
@@ -56,15 +63,21 @@ func (postSeeder *PostSeeder) Down() {
 			panic(beginErr)
 		}
 
-		_, err := begin.Query(
-			"DELETE FROM \"post\" WHERE id = $1 LIMIT 1;",
-			post.Id,
-		)
-		if err != nil {
-			panic(err)
+		queryErr := crdb.Execute(func() (err error) {
+			_, err = begin.Query(
+				"DELETE FROM \"post\" WHERE id = $1 LIMIT 1;",
+				post.Id,
+			)
+			return err
+		})
+		if queryErr != nil {
+			panic(queryErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
 		if commitErr != nil {
 			panic(commitErr)
 		}

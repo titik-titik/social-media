@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -56,7 +57,10 @@ func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.Use
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -98,7 +102,10 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) *model.Result
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -141,7 +148,10 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*enti
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -184,7 +194,10 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -227,7 +240,10 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -270,7 +286,10 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) *model.Resu
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -313,7 +332,10 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -402,7 +424,10 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
@@ -462,7 +487,10 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.U
 		}
 	}
 
-	commitErr := begin.Commit()
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
 	if commitErr != nil {
 		return &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,

@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -82,6 +83,18 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 		}
 	}
 
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Register is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
 		Code:    http.StatusCreated,
 		Message: "AuthUseCase Register is succeed.",
@@ -156,6 +169,18 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *m
 			}
 		}
 
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
+		if commitErr != nil {
+			return &model.Result[*entity.Session]{
+				Code:    http.StatusInternalServerError,
+				Message: "AuthUseCase Login is failed, transaction commit is failed.",
+				Data:    nil,
+			}
+		}
+
 		return &model.Result[*entity.Session]{
 			Code:    http.StatusOK,
 			Message: "AuthUseCase Login is succeed.",
@@ -188,6 +213,18 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *m
 		return &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
 			Message: "AuthUseCase Login is failed, session is not created.",
+			Data:    nil,
+		}
+	}
+
+	commitErr := crdb.Execute(func() (err error) {
+		err = begin.Commit()
+		return err
+	})
+	if commitErr != nil {
+		return &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Login is failed, transaction commit is failed.",
 			Data:    nil,
 		}
 	}

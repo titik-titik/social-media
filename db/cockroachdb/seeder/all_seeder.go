@@ -33,8 +33,8 @@ func (allSeeder *AllSeeder) Up() {
 
 func (allSeeder *AllSeeder) Down() {
 	fmt.Println("Seeder down started.")
-	//allSeeder.Post.Down()
-	//allSeeder.Session.Down()
-	//allSeeder.User.Down()
+	allSeeder.Post.Down()
+	allSeeder.Session.Down()
+	allSeeder.User.Down()
 	fmt.Println("Seeder down finished.")
 }

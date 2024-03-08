@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 
 	"social-media/internal/entity"
 )
@@ -36,9 +37,13 @@ func DeserializePostRows(rows *sql.Rows) []*entity.Post {
 }
 
 func (searchRepository *SearchRepository) FindAllUser(begin *sql.Tx) []*entity.User {
-	rows, queryErr := begin.Query(
-		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user", nil,
-	)
+	var rows *sql.Rows
+	queryErr := crdb.Execute(func() (err error) {
+		rows, err = begin.Query(
+			"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user", nil,
+		)
+		return err
+	})
 	if queryErr != nil {
 		panic(queryErr)
 	}
@@ -49,9 +54,13 @@ func (searchRepository *SearchRepository) FindAllUser(begin *sql.Tx) []*entity.U
 }
 
 func (searchRepository *SearchRepository) FindAllPostByUserId(begin *sql.Tx, id string) []*entity.Post {
-	rows, queryErr := begin.Query(
-		"SELECT id, user_id, description, image_url, created_at, updated_at, deleted_at FROM \"post\" where user_id = ? LIMIT 1", id,
-	)
+	var rows *sql.Rows
+	queryErr := crdb.Execute(func() (err error) {
+		rows, err = begin.Query(
+			"SELECT id, user_id, description, image_url, created_at, updated_at, deleted_at FROM \"post\" where user_id = ? LIMIT 1", id,
+		)
+		return err
+	})
 	if queryErr != nil {
 		panic(queryErr)
 	}
