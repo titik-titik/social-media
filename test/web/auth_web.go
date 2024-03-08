@@ -64,21 +64,20 @@ func (authWeb *AuthWeb) Register(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusCreated, response.StatusCode)
-	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
+	assert.Equal(t, http.StatusCreated, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 	assert.Equal(t, mockAuth.Username.String, bodyResponse.Data.Username.String)
 	assert.Equal(t, mockAuth.Email.String, bodyResponse.Data.Email.String)
 	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(mockAuth.Password.String)))
 
-	newUserRow := bodyResponse.Data
-	testWeb.AllSeeder.User.UserMock.Data = append(testWeb.AllSeeder.User.UserMock.Data, newUserRow)
+	newUserMock := bodyResponse.Data
+	testWeb.AllSeeder.User.UserMock.Data = append(testWeb.AllSeeder.User.UserMock.Data, newUserMock)
 }
 
 func (authWeb *AuthWeb) Login(t *testing.T) {
@@ -87,11 +86,12 @@ func (authWeb *AuthWeb) Login(t *testing.T) {
 	testWeb := GetTestWeb()
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
-	mockAuth := testWeb.AllSeeder.User.UserMock.Data[0]
+
+	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	bodyRequest := &model_request.LoginRequest{}
-	bodyRequest.Email = null.NewString(mockAuth.Email.String, true)
-	bodyRequest.Password = null.NewString(mockAuth.Password.String, true)
+	bodyRequest.Email = selectedUserMock.Email
+	bodyRequest.Password = selectedUserMock.Password
 
 	bodyRequestJsonByte, marshalErr := json.Marshal(bodyRequest)
 	if marshalErr != nil {
@@ -110,17 +110,13 @@ func (authWeb *AuthWeb) Login(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-
-	contentType := response.Header.Get("Content-Type")
-	assert.Equal(t, "application/json", contentType)
-
 	bodyResponse := &model_response.Response[*entity.Session]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
-	expectedMessage := "Login successful"
-	assert.Equal(t, expectedMessage, bodyResponse.Message)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.UserId)
 }

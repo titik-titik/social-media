@@ -2,23 +2,19 @@ package repository
 
 import (
 	"database/sql"
-	// "social-media/internal/config"
-	"social-media/internal/config"
+
 	"social-media/internal/entity"
 )
 
 type SearchRepository struct {
-	Database *config.DatabaseConfig
 }
 
-func NewSearchRepository(database *config.DatabaseConfig) *SearchRepository {
-	searchRepository := &SearchRepository{
-		Database: database,
-	}
+func NewSearchRepository() *SearchRepository {
+	searchRepository := &SearchRepository{}
 	return searchRepository
 }
 
-func deserializeRowsForPost(rows *sql.Rows) []*entity.Post {
+func DeserializePostRows(rows *sql.Rows) []*entity.Post {
 	var foundPosts []*entity.Post
 	for rows.Next() {
 		foundPost := &entity.Post{}
@@ -34,20 +30,12 @@ func deserializeRowsForPost(rows *sql.Rows) []*entity.Post {
 		if scanErr != nil {
 			panic(scanErr)
 		}
-
-		foundPost.CreatedAt.Time = foundPost.CreatedAt.Time.UTC()
-		foundPost.UpdatedAt.Time = foundPost.UpdatedAt.Time.UTC()
-		foundPost.DeletedAt.Time = foundPost.DeletedAt.Time.UTC()
 		foundPosts = append(foundPosts, foundPost)
 	}
 	return foundPosts
 }
 
-func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
-	begin, beginErr := searchRepository.Database.CockroachdbDatabase.Connection.Begin()
-	if beginErr != nil {
-		panic(beginErr)
-	}
+func (searchRepository *SearchRepository) FindAllUser(begin *sql.Tx) []*entity.User {
 	rows, queryErr := begin.Query(
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user", nil,
 	)
@@ -55,22 +43,18 @@ func (searchRepository *SearchRepository) FindAllUser() []*entity.User {
 		panic(queryErr)
 	}
 
-	foundAllUser := deserializeRows(rows)
+	foundAllUser := DeserializeUserRows(rows)
 	return foundAllUser
 
 }
 
-func (searchRepository *SearchRepository) FindAllPostByUserId(id string) []*entity.Post {
-	begin, beginErr := searchRepository.Database.CockroachdbDatabase.Connection.Begin()
-	if beginErr != nil {
-		panic(beginErr)
-	}
+func (searchRepository *SearchRepository) FindAllPostByUserId(begin *sql.Tx, id string) []*entity.Post {
 	rows, queryErr := begin.Query(
-		"SELECT id, user_id, description, image, created_at, updated_at, deleted_at FROM post where user_id = ? LIMIT 1", id,
+		"SELECT id, user_id, description, image_url, created_at, updated_at, deleted_at FROM \"post\" where user_id = ? LIMIT 1", id,
 	)
 	if queryErr != nil {
 		panic(queryErr)
 	}
-	foundAllPosts := deserializeRowsForPost(rows)
+	foundAllPosts := DeserializePostRows(rows)
 	return foundAllPosts
 }

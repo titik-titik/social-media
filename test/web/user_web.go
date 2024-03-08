@@ -43,9 +43,9 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
+	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
-	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
+	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserMock.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
@@ -58,22 +58,21 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
-	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
-	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
-	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
-	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
-	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
-	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserMock.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserMock.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserMock.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserMock.Password.String)))
+	assert.Equal(t, selectedUserMock.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserMock.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
@@ -83,9 +82,9 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
+	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
-	url := fmt.Sprintf("%s/%s?email=%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Email.String)
+	url := fmt.Sprintf("%s/%s?email=%s", testWeb.Server.URL, userWeb.Path, selectedUserMock.Email.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
@@ -95,22 +94,21 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
-	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
-	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
-	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
-	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
-	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
-	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserMock.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserMock.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserMock.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserMock.Password.String)))
+	assert.Equal(t, selectedUserMock.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserMock.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
@@ -120,9 +118,9 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
+	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
-	url := fmt.Sprintf("%s/%s?username=%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Username.String)
+	url := fmt.Sprintf("%s/%s?username=%s", testWeb.Server.URL, userWeb.Path, selectedUserMock.Username.String)
 	request, newRequestErr := http.NewRequest(http.MethodGet, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
@@ -132,22 +130,21 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
-	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
-	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
-	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
-	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
-	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
-	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserMock.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserMock.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserMock.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserMock.Password.String)))
+	assert.Equal(t, selectedUserMock.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserMock.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) PatchOneById(t *testing.T) {
@@ -157,15 +154,15 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
+	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
 	bodyRequest := &model_request.UserPatchOneByIdRequest{}
-	bodyRequest.Name = null.NewString(selectedUserData.Name.String+"patched", true)
-	bodyRequest.Email = null.NewString(selectedUserData.Email.String+"patched", true)
-	bodyRequest.Username = null.NewString(selectedUserData.Username.String+"patched", true)
-	bodyRequest.Password = null.NewString(selectedUserData.Password.String+"patched", true)
-	bodyRequest.AvatarUrl = null.NewString(selectedUserData.AvatarUrl.String+"patched", true)
-	bodyRequest.Bio = null.NewString(selectedUserData.Bio.String+"patched", true)
+	bodyRequest.Name = null.NewString(selectedUserMock.Name.String+"patched", true)
+	bodyRequest.Email = null.NewString(selectedUserMock.Email.String+"patched", true)
+	bodyRequest.Username = null.NewString(selectedUserMock.Username.String+"patched", true)
+	bodyRequest.Password = null.NewString(selectedUserMock.Password.String+"patched", true)
+	bodyRequest.AvatarUrl = null.NewString(selectedUserMock.AvatarUrl.String+"patched", true)
+	bodyRequest.Bio = null.NewString(selectedUserMock.Bio.String+"patched", true)
 
 	bodyRequestJsonByte, marshalErr := json.Marshal(bodyRequest)
 	if marshalErr != nil {
@@ -173,7 +170,7 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	}
 	bodyRequestBuffer := bytes.NewBuffer(bodyRequestJsonByte)
 
-	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
+	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserMock.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodPatch, url, bodyRequestBuffer)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
@@ -183,16 +180,15 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.Id)
 	assert.Equal(t, bodyRequest.Name, bodyResponse.Data.Name)
 	assert.Equal(t, bodyRequest.Email, bodyResponse.Data.Email)
 	assert.Equal(t, bodyRequest.Username, bodyResponse.Data.Username)
@@ -208,9 +204,57 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	selectedUserData := testWeb.AllSeeder.User.UserMock.Data[0]
+	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
 
-	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserData.Id.String)
+	userSessions := []*entity.Session{}
+	for _, session := range testWeb.AllSeeder.Session.SessionMock.Data {
+		if session.UserId == selectedUserMock.Id {
+			userSessions = append(userSessions, session)
+		}
+	}
+
+	for _, userSession := range userSessions {
+		begin, beginErr := testWeb.Container.Database.CockroachdbDatabase.Connection.Begin()
+		if beginErr != nil {
+			t.Fatal(beginErr)
+		}
+
+		_, deleteSessionErr := begin.Exec("DELETE FROM \"session\" WHERE id = $1 LIMIT 1;", userSession.Id)
+		if deleteSessionErr != nil {
+			t.Fatal(deleteSessionErr)
+		}
+
+		commitErr := begin.Commit()
+		if commitErr != nil {
+			t.Fatal(commitErr)
+		}
+	}
+
+	var userPosts []*entity.Post
+	for _, post := range testWeb.AllSeeder.Post.PostMock.Data {
+		if post.UserId == selectedUserMock.Id {
+			userPosts = append(userPosts, post)
+		}
+	}
+
+	for _, userPost := range userPosts {
+		begin, beginErr := testWeb.Container.Database.CockroachdbDatabase.Connection.Begin()
+		if beginErr != nil {
+			t.Fatal(beginErr)
+		}
+
+		_, deletePostErr := begin.Exec("DELETE FROM \"post\" WHERE id = $1 LIMIT 1;", userPost.Id)
+		if deletePostErr != nil {
+			t.Fatal(deletePostErr)
+		}
+
+		commitErr := begin.Commit()
+		if commitErr != nil {
+			t.Fatal(commitErr)
+		}
+	}
+
+	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserMock.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodDelete, url, http.NoBody)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
@@ -220,20 +264,19 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 		t.Fatal(doErr)
 	}
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-
 	bodyResponse := &model_response.Response[*entity.User]{}
 	decodeErr := json.NewDecoder(response.Body).Decode(bodyResponse)
 	if decodeErr != nil {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
-	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
-	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
-	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
-	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
-	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
-	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserMock.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserMock.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserMock.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserMock.Password.String)))
+	assert.Equal(t, selectedUserMock.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserMock.Bio, bodyResponse.Data.Bio)
 }

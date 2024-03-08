@@ -13,16 +13,10 @@ type PostMock struct {
 	Data     []*entity.Post
 }
 
-func NewPostMock() *PostMock {
-	userMock := NewUserMock()
-
+func NewPostMock(
+	userMock *UserMock,
+) *PostMock {
 	currentTime := time.Now().UTC()
-	currentTimeIso8601String := currentTime.Format(time.RFC3339)
-	currentTimeIso8601, parseErr := time.Parse(time.RFC3339, currentTimeIso8601String)
-	if parseErr != nil {
-		panic(parseErr)
-	}
-
 	postMock := &PostMock{
 		UserMock: userMock,
 		Data: []*entity.Post{
@@ -31,8 +25,8 @@ func NewPostMock() *PostMock {
 				UserId:      null.NewString(userMock.Data[0].Id.String, true),
 				ImageUrl:    null.NewString("https://placehold.co/400x400?text=image_url0", true),
 				Description: null.NewString("description0", true),
-				CreatedAt:   null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(0))), true),
-				UpdatedAt:   null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(0))), true),
+				CreatedAt:   null.NewTime(currentTime.Add(time.Duration(time.Duration.Seconds(0))), true),
+				UpdatedAt:   null.NewTime(currentTime.Add(time.Duration(time.Duration.Seconds(0))), true),
 				DeletedAt:   null.NewTime(time.Time{}, false),
 			},
 			{
@@ -40,8 +34,8 @@ func NewPostMock() *PostMock {
 				UserId:      null.NewString(userMock.Data[1].Id.String, true),
 				ImageUrl:    null.NewString("https://placehold.co/400x400?text=image_url1", true),
 				Description: null.NewString("description1", true),
-				CreatedAt:   null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(1))), true),
-				UpdatedAt:   null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(1))), true),
+				CreatedAt:   null.NewTime(currentTime.Add(time.Duration(time.Duration.Seconds(1))), true),
+				UpdatedAt:   null.NewTime(currentTime.Add(time.Duration(time.Duration.Seconds(1))), true),
 				DeletedAt:   null.NewTime(time.Time{}, false),
 			},
 		},

@@ -14,11 +14,6 @@ type UserMock struct {
 
 func NewUserMock() *UserMock {
 	currentTime := time.Now().UTC()
-	currentTimeIso8601String := currentTime.Format(time.RFC3339)
-	currentTimeIso8601, parseErr := time.Parse(time.RFC3339, currentTimeIso8601String)
-	if parseErr != nil {
-		panic(parseErr)
-	}
 
 	userMock := &UserMock{
 		Data: []*entity.User{
@@ -31,8 +26,8 @@ func NewUserMock() *UserMock {
 				AvatarUrl:  null.NewString("https://placehold.co/400x400?text=avatar_url0", true),
 				Bio:        null.NewString("bio0", true),
 				IsVerified: null.NewBool(false, true),
-				CreatedAt:  null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(0))), true),
-				UpdatedAt:  null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(0))), true),
+				CreatedAt:  null.NewTime(currentTime.Add(0*time.Second), true),
+				UpdatedAt:  null.NewTime(currentTime.Add(0*time.Second), true),
 				DeletedAt:  null.NewTime(time.Time{}, false),
 			},
 			{
@@ -44,8 +39,8 @@ func NewUserMock() *UserMock {
 				AvatarUrl:  null.NewString("https://placehold.co/400x400?text=avatar_url1", true),
 				Bio:        null.NewString("bio1", true),
 				IsVerified: null.NewBool(true, true),
-				CreatedAt:  null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(1))), true),
-				UpdatedAt:  null.NewTime(currentTimeIso8601.Add(time.Duration(time.Duration.Seconds(1))), true),
+				CreatedAt:  null.NewTime(currentTime.Add(1*time.Second), true),
+				UpdatedAt:  null.NewTime(currentTime.Add(1*time.Second), true),
 				DeletedAt:  null.NewTime(time.Time{}, false),
 			},
 		},

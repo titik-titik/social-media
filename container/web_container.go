@@ -2,7 +2,6 @@ package container
 
 import (
 	"fmt"
-	"social-media/db/redis"
 	"social-media/internal/config"
 	http_delivery "social-media/internal/delivery/http"
 	"social-media/internal/delivery/http/route"
@@ -20,12 +19,9 @@ type WebContainer struct {
 	UseCase    *UseCaseContainer
 	Controller *ControllerContainer
 	Route      *route.RootRoute
-	Redis      *redis.RedisManager
 }
 
 func NewWebContainer() *WebContainer {
-
-	// Load Environment Variable
 	errEnvLoad := godotenv.Load()
 	if errEnvLoad != nil {
 		panic(fmt.Errorf("error loading .env file: %w", errEnvLoad))
@@ -34,16 +30,15 @@ func NewWebContainer() *WebContainer {
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 
-	searchRepository := repository.NewSearchRepository(databaseConfig)
-	userRepository := repository.NewUserRepository(databaseConfig)
+	searchRepository := repository.NewSearchRepository()
+	userRepository := repository.NewUserRepository()
+	sessionRepository := repository.NewSessionRepository()
 	postRepository := repository.NewPostRepository()
-	authRepository := repository.NewAuthRepository(databaseConfig)
-	repositoryContainer := NewRepositoryContainer(userRepository, postRepository, authRepository, searchRepository)
-	redisManager := redis.NewRedisManager()
+	repositoryContainer := NewRepositoryContainer(userRepository, sessionRepository, postRepository, searchRepository)
 
-	searchUseCase := use_case.NewSearchUseCase(searchRepository)
-	userUseCase := use_case.NewUserUseCase(userRepository)
-	authUseCase := use_case.NewAuthUseCase(authRepository)
+	searchUseCase := use_case.NewSearchUseCase(databaseConfig, searchRepository)
+	userUseCase := use_case.NewUserUseCase(databaseConfig, userRepository)
+	authUseCase := use_case.NewAuthUseCase(databaseConfig, userRepository, sessionRepository)
 	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
 	useCaseContainer := NewUseCaseContainer(userUseCase, authUseCase, searchUseCase)
 
@@ -74,7 +69,6 @@ func NewWebContainer() *WebContainer {
 		UseCase:    useCaseContainer,
 		Controller: controllerContainer,
 		Route:      rootRoute,
-		Redis:      redisManager,
 	}
 
 	return webContainer
