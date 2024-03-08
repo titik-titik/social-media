@@ -13,10 +13,10 @@ type AuthController struct {
 }
 
 func NewAuthController(authUseCase *use_case.AuthUseCase) *AuthController {
-	AuthController := &AuthController{
+	authController := &AuthController{
 		AuthUseCase: authUseCase,
 	}
-	return AuthController
+	return authController
 }
 func (authController *AuthController) Register(writer http.ResponseWriter, reader *http.Request) {
 	request := &model_request.RegisterRequest{}

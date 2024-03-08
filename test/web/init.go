@@ -26,10 +26,12 @@ func NewTestWeb() *TestWeb {
 }
 
 func (web *TestWeb) GetAllSeeder() *seeder.AllSeeder {
-	userSeeder := seeder.NewUserSeeder(web.Container.Repository.User)
-	postSeeder := seeder.NewPostSeeder(web.Container.Repository.Post)
+	userSeeder := seeder.NewUserSeeder(web.Container.Database)
+	sessionSeeder := seeder.NewSessionSeeder(web.Container.Database, userSeeder)
+	postSeeder := seeder.NewPostSeeder(web.Container.Database, userSeeder)
 	seederConfig := seeder.NewAllSeeder(
 		userSeeder,
+		sessionSeeder,
 		postSeeder,
 	)
 	return seederConfig

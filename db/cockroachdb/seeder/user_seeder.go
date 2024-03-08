@@ -1,41 +1,78 @@
 package seeder
 
 import (
-	"social-media/internal/repository"
-	"social-media/test/mock"
-	"social-media/tool"
-
 	"github.com/guregu/null"
 	"golang.org/x/crypto/bcrypt"
+	"social-media/internal/config"
+	"social-media/test/mock"
 )
 
 type UserSeeder struct {
+	DatabaseConfig *config.DatabaseConfig
 	UserMock       *mock.UserMock
-	UserRepository *repository.UserRepository
 }
 
-func NewUserSeeder(userRepository *repository.UserRepository) *UserSeeder {
+func NewUserSeeder(
+	databaseConfig *config.DatabaseConfig,
+) *UserSeeder {
 	userSeeder := &UserSeeder{
+		DatabaseConfig: databaseConfig,
 		UserMock:       mock.NewUserMock(),
-		UserRepository: userRepository,
 	}
 	return userSeeder
 }
 
 func (userSeeder *UserSeeder) Up() {
 	for _, user := range userSeeder.UserMock.Data {
-		userCopied := tool.DeepCopy(user)
-		hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(userCopied.Password.String), bcrypt.DefaultCost)
+		hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(user.Password.String), bcrypt.DefaultCost)
 		if hashedPasswordErr != nil {
 			panic(hashedPasswordErr)
 		}
-		userCopied.Password = null.NewString(string(hashedPassword), true)
-		userSeeder.UserRepository.CreateOne(userCopied)
+		password := null.NewString(string(hashedPassword), true)
+		begin, beginErr := userSeeder.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if beginErr != nil {
+			panic(beginErr)
+		}
+		_, err := begin.Query(
+			"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
+			user.Id,
+			user.Name,
+			user.Username,
+			user.Email,
+			password,
+			user.AvatarUrl,
+			user.Bio,
+			user.IsVerified,
+			user.CreatedAt,
+			user.UpdatedAt,
+			user.DeletedAt,
+		)
+		if err != nil {
+			panic(err)
+		}
+		commitErr := begin.Commit()
+		if commitErr != nil {
+			panic(commitErr)
+		}
 	}
 }
 
 func (userSeeder *UserSeeder) Down() {
 	for _, user := range userSeeder.UserMock.Data {
-		userSeeder.UserRepository.DeleteOneById(user.Id.String)
+		begin, beginErr := userSeeder.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if beginErr != nil {
+			panic(beginErr)
+		}
+		_, err := begin.Query(
+			"DELETE FROM \"user\" WHERE id = $1 LIMIT 1;",
+			user.Id,
+		)
+		if err != nil {
+			panic(err)
+		}
+		commitErr := begin.Commit()
+		if commitErr != nil {
+			panic(commitErr)
+		}
 	}
 }

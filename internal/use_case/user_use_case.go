@@ -1,6 +1,8 @@
 package use_case
 
 import (
+	"net/http"
+	"social-media/internal/config"
 	"social-media/internal/entity"
 	"social-media/internal/model"
 	model_request "social-media/internal/model/request/controller"
@@ -12,212 +14,465 @@ import (
 )
 
 type UserUseCase struct {
+	DatabaseConfig *config.DatabaseConfig
 	UserRepository *repository.UserRepository
 }
 
 func NewUserUseCase(
+	databaseConfig *config.DatabaseConfig,
 	userRepository *repository.UserRepository,
 ) *UserUseCase {
 	userUseCase := &UserUseCase{
+		DatabaseConfig: databaseConfig,
 		UserRepository: userRepository,
 	}
 	return userUseCase
 }
 
 func (userUseCase *UserUseCase) FindOneById(id string) *model.Result[*entity.User] {
-	foundUser := userUseCase.UserRepository.FindOneById(id)
-
-	if foundUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    404,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneById is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneById(begin, id)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase FindOneById is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
 			Message: "UserUserCase FindOneById is failed, user is not found by id.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneById is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase FindOneById is succeed.",
 		Data:    foundUser,
 	}
 }
 
 func (userUseCase *UserUseCase) FindOneByUsername(username string) *model.Result[*entity.User] {
-	foundUser := userUseCase.UserRepository.FindOneByUsername(username)
-
-	if foundUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    404,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByUsername is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneByUsername(begin, username)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase FindOneByUsername is failed, transaction rollback is failed.",
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
 			Message: "UserUserCase FindOneByUsername is failed, user is not found by username.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByUsername is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase FindOneByUsername is succeed.",
 		Data:    foundUser,
 	}
 }
 
 func (userUseCase *UserUseCase) FindOneByEmail(email string) *model.Result[*entity.User] {
-	foundUser := userUseCase.UserRepository.FindOneByEmail(email)
-
-	if foundUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    404,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByEmail is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneByEmail(begin, email)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase FindOneByEmail is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
 			Message: "UserUserCase FindOneByEmail is failed, user is not found by email.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByEmail is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase FindOneByEmail is succeed.",
 		Data:    foundUser,
 	}
 }
 
 func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string) *model.Result[*entity.User] {
-	foundUser := userUseCase.UserRepository.FindOneByEmailAndPassword(email, password)
-
-	if foundUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    404,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByEmailAndPassword is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneByEmailAndPassword(begin, email, password)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase FindOneByEmailAndPassword is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
 			Message: "UserUserCase FindOneByEmailAndPassword is failed, user is not found by email and password.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByEmailAndPassword is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase FindOneByEmailAndPassword is succeed.",
 		Data:    foundUser,
 	}
 }
 
 func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password string) *model.Result[*entity.User] {
-	foundUser := userUseCase.UserRepository.FindOneByUsernameAndPassword(username, password)
-
-	if foundUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    404,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByUsernameAndPassword is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneByUsernameAndPassword(begin, username, password)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase FindOneByUsernameAndPassword is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
 			Message: "UserUserCase FindOneByUsernameAndPassword is failed, user is not found by username and password.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase FindOneByUsernameAndPassword is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase FindOneByUsernameAndPassword is succeed.",
 		Data:    foundUser,
 	}
 }
 
 func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) *model.Result[*entity.User] {
-	createdUser := userUseCase.UserRepository.CreateOne(toCreateUser)
-
-	if createdUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase CreateOne is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	createdUser := userUseCase.UserRepository.CreateOne(begin, toCreateUser)
+	if createdUser == nil {
+		rollbackErr := begin.Rollback()
+		if rollbackErr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase CreateOne is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
 			Message: "UserUserCase CreateOne is failed, user is not created.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase CreateOne is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase CreateOne is succeed.",
 		Data:    createdUser,
 	}
 }
 
 func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User) *model.Result[*entity.User] {
-	patchedUser := userUseCase.UserRepository.PatchOneById(id, toPatchUser)
-
-	if patchedUser == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase PatchOneById is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	patchedUser := userUseCase.UserRepository.PatchOneById(begin, id, toPatchUser)
+	if patchedUser == nil {
+		rollbackErr := begin.Rollback()
+		if rollbackErr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase PatchOneById is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
 			Message: "UserUserCase UserPatchOneByIdRequest is failed, user is not patched.",
 			Data:    nil,
 		}
 	}
 
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase PatchOneById is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
 		Message: "UserUserCase UserPatchOneByIdRequest is succeed.",
 		Data:    patchedUser,
 	}
 }
 
 func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *model_request.UserPatchOneByIdRequest) *model.Result[*entity.User] {
-	foundUserResult := userUseCase.FindOneById(id)
-	if foundUserResult.Code != 200 || foundUserResult.Data == nil {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    500,
-			Message: "UserUserCase PatchOneByIdFromRequest is failed, " + foundUserResult.Message,
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase PatchOneByIdFromRequest is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneById(begin, id)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase PatchOneByIdFromRequest is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
+			Message: "UserUserCase PatchOneByIdFromRequest is failed, user is not found by id.",
 			Data:    nil,
 		}
 	}
 
 	if request.Name.Valid {
-		foundUserResult.Data.Name = request.Name
+		foundUser.Name = request.Name
 	}
 	if request.Email.Valid {
-		foundUserResult.Data.Email = request.Email
+		foundUser.Email = request.Email
 	}
 	if request.Username.Valid {
-		foundUserResult.Data.Username = request.Username
+		foundUser.Username = request.Username
 	}
 	hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(request.Password.String), bcrypt.DefaultCost)
 	if hashedPasswordErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "UserUserCase PatchOneByIdFromRequest is failed, password hashing is failed.",
 			Data:    nil,
 		}
 	}
 	if request.Password.Valid {
-		foundUserResult.Data.Password = null.NewString(string(hashedPassword), true)
+		foundUser.Password = null.NewString(string(hashedPassword), true)
 	}
 	if request.AvatarUrl.Valid {
-		foundUserResult.Data.AvatarUrl = request.AvatarUrl
+		foundUser.AvatarUrl = request.AvatarUrl
 	}
 	if request.Bio.Valid {
-		foundUserResult.Data.Bio = request.Bio
+		foundUser.Bio = request.Bio
 	}
 
-	foundUserResult.Data.UpdatedAt = null.NewTime(time.Now().UTC(), true)
+	foundUser.UpdatedAt = null.NewTime(time.Now().UTC(), true)
 
-	patchedUserResult := userUseCase.PatchOneById(id, foundUserResult.Data)
-	if patchedUserResult.Code != 200 || patchedUserResult.Data == nil {
+	patchedUser := userUseCase.UserRepository.PatchOneById(begin, id, foundUser)
+	if patchedUser == nil {
+		rollbackErr := begin.Rollback()
+		if rollbackErr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase PatchOneByIdFromRequest is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
 		return &model.Result[*entity.User]{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "UserUserCase PatchOneByIdFromRequest is failed, user is not patched.",
 			Data:    nil,
 		}
 	}
 
-	return &model.Result[*entity.User]{
-		Code:    200,
-		Message: "UserUserCase PatchOneByIdFromRequest is succeed.",
-		Data:    patchedUserResult.Data,
-	}
-}
-
-func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.User] {
-	deletedUser := userUseCase.UserRepository.DeleteOneById(id)
-
-	if deletedUser == nil {
+	commitErr := begin.Commit()
+	if commitErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    500,
-			Message: "UserUserCase DeleteOneById is failed, user is not deleted.",
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase PatchOneByIdFromRequest is failed, transaction commit is failed.",
 			Data:    nil,
 		}
 	}
 
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusOK,
+		Message: "UserUserCase PatchOneByIdFromRequest is succeed.",
+		Data:    patchedUser,
+	}
+}
+
+func (userUseCase *UserUseCase) DeleteOneById(id string) *model.Result[*entity.User] {
+	begin, beginErr := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase DeleteOneById is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
+	foundUser := userUseCase.UserRepository.FindOneById(begin, id)
+	if foundUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase DeleteOneById is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusNotFound,
+			Message: "UserUserCase DeleteOneById is failed, user is not found by id.",
+			Data:    nil,
+		}
+	}
+
+	deletedUser := userUseCase.UserRepository.DeleteOneById(begin, id)
+	if deletedUser == nil {
+		rollbackErr := begin.Rollback()
+		if rollbackErr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "UserUserCase DeleteOneById is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase DeleteOneById is failed, user is not deleted.",
+			Data:    nil,
+		}
+	}
+
+	commitErr := begin.Commit()
+	if commitErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "UserUserCase DeleteOneById is failed, transaction commit is failed.",
+			Data:    nil,
+		}
+	}
+
+	return &model.Result[*entity.User]{
+		Code:    http.StatusOK,
 		Message: "UserUserCase DeleteOneById is succeed.",
 		Data:    deletedUser,
 	}

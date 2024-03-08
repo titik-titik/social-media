@@ -5,8 +5,8 @@ import (
 )
 
 type Session struct {
-	ID                    null.String `json:"id" bson:"id"`
-	UserID                null.String `json:"user_id" bson:"user_id"`
+	Id                    null.String `json:"id" bson:"id"`
+	UserId                null.String `json:"user_id" bson:"user_id"`
 	AccessToken           null.String `json:"access_token" bson:"access_token"`
 	RefreshToken          null.String `json:"refresh_token" bson:"refresh_token"`
 	AccessTokenExpiredAt  null.Time   `json:"access_token_expired_at" bson:"access_token_expired_at"`

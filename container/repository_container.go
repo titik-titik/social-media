@@ -3,23 +3,23 @@ package container
 import "social-media/internal/repository"
 
 type RepositoryContainer struct {
-	User   *repository.UserRepository
-	Post   *repository.PostRepository
-	Auth   *repository.AuthRepository
-	Search *repository.SearchRepository
+	User    *repository.UserRepository
+	Session *repository.SessionRepository
+	Post    *repository.PostRepository
+	Search  *repository.SearchRepository
 }
 
 func NewRepositoryContainer(
 	user *repository.UserRepository,
+	session *repository.SessionRepository,
 	post *repository.PostRepository,
-	auth *repository.AuthRepository,
 	search *repository.SearchRepository,
 ) *RepositoryContainer {
 	repositoryContainer := &RepositoryContainer{
-		User:   user,
-		Post:   post,
-		Auth:   auth,
-		Search: search,
+		User:    user,
+		Session: session,
+		Post:    post,
+		Search:  search,
 	}
 	return repositoryContainer
 }

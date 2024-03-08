@@ -2,10 +2,10 @@ package use_case
 
 import (
 	"net/http"
+	"social-media/internal/config"
 	"social-media/internal/entity"
 	"social-media/internal/model"
 	model_controller "social-media/internal/model/request/controller"
-	model_repository "social-media/internal/model/request/repository"
 	"social-media/internal/repository"
 	"time"
 
@@ -15,19 +15,34 @@ import (
 )
 
 type AuthUseCase struct {
-	AuthRepository *repository.AuthRepository
+	DatabaseConfig    *config.DatabaseConfig
+	UserRepository    *repository.UserRepository
+	SessionRepository *repository.SessionRepository
 }
 
 func NewAuthUseCase(
-	authRepository *repository.AuthRepository,
+	databaseConfig *config.DatabaseConfig,
+	userRepository *repository.UserRepository,
+	sessionRepository *repository.SessionRepository,
 ) *AuthUseCase {
 	authUseCase := &AuthUseCase{
-		AuthRepository: authRepository,
+		DatabaseConfig:    databaseConfig,
+		UserRepository:    userRepository,
+		SessionRepository: sessionRepository,
 	}
 	return authUseCase
 }
 
 func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) *model.Result[*entity.User] {
+	begin, beginErr := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
+		return &model.Result[*entity.User]{
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Register is failed, transaction begin is failed.",
+			Data:    nil,
+		}
+	}
+
 	newUser := &entity.User{
 		Username:  request.Username,
 		Email:     request.Email,
@@ -39,21 +54,29 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 	hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(request.Password.String), bcrypt.DefaultCost)
 	if hashedPasswordErr != nil {
 		return &model.Result[*entity.User]{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "AuthUseCase Register is failed, password hashing is failed.",
 			Data:    nil,
 		}
 	}
 	newUser.Password = null.NewString(string(hashedPassword), true)
 
-	newUUID := uuid.New()
+	newUUId := uuid.New()
 
-	newUser.Id = null.NewString(newUUID.String(), true)
+	newUser.Id = null.NewString(newUUId.String(), true)
 
-	createdUser := authUseCase.AuthRepository.Register(newUser)
+	createdUser := authUseCase.UserRepository.CreateOne(begin, newUser)
 	if createdUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.User]{
+				Code:    http.StatusInternalServerError,
+				Message: "AuthUseCase Register is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
 		return &model.Result[*entity.User]{
-			Code:    500,
+			Code:    http.StatusInternalServerError,
 			Message: "AuthUseCase Register is failed, user is not created.",
 			Data:    nil,
 		}
@@ -66,58 +89,112 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 	}
 }
 
-func (ac *AuthUseCase) Login(request *model_controller.LoginRequest) *model.Result[*entity.Session] {
-	id := uuid.New().String()
-
-	accToken := uuid.New().String()
-	if accToken == "" {
+func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *model.Result[*entity.Session] {
+	begin, beginErr := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+	if beginErr != nil {
 		return &model.Result[*entity.Session]{
-			Code:    500,
-			Message: "AuthUseCase Register is failed, password hashing is failed.",
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Login is failed, transaction begin is failed.",
 			Data:    nil,
 		}
 	}
-	accExpiration := time.Now().Add(time.Minute * 15)
 
-	refToken := uuid.New().String()
-	if refToken == "" {
+	selectedUser := authUseCase.UserRepository.FindOneByEmail(begin, request.Email.String)
+	if selectedUser == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.Session]{
+				Code:    http.StatusInternalServerError,
+				Message: "AuthUseCase Login is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
 		return &model.Result[*entity.Session]{
-			Code:    500,
-			Message: "AuthUseCase Register is failed, password hashing is failed.",
+			Code:    http.StatusNotFound,
+			Message: "AuthUseCase Login is failed, user is not found by email.",
 			Data:    nil,
 		}
 	}
-	currentTime := time.Now()
-	refExpiration := time.Now().Add(time.Hour * 24 * 7)
-	repositoryRequest := &model_repository.LoginRepositoryRequest{
-		LoginControllerRequest: request,
-		Session: &entity.Session{
-			ID:                    null.NewString(id, true),
-			AccessToken:           null.NewString(accToken, true),
-			RefreshToken:          null.NewString(refToken, true),
-			AccessTokenExpiredAt:  null.NewTime(accExpiration, true),
-			RefreshTokenExpiredAt: null.NewTime(refExpiration, true),
-			CreatedAt:             null.NewTime(currentTime, true),
-			UpdatedAt:             null.NewTime(currentTime, true),
-			DeletedAt:             null.NewTime(time.Time{}, false),
-		},
-		User: &entity.User{
-			Email:    request.Email,
-			Password: request.Password,
-		},
-	}
 
-	result := ac.AuthRepository.Login(repositoryRequest)
-	if result == nil {
+	comparePasswordErr := bcrypt.CompareHashAndPassword([]byte(selectedUser.Password.String), []byte(request.Password.String))
+	if comparePasswordErr != nil {
 		return &model.Result[*entity.Session]{
-			Code:    500,
-			Message: "AuthUseCase Register is failed, user is not created.",
+			Code:    http.StatusNotFound,
+			Message: "AuthUseCase Login is failed, password is not match.",
 			Data:    nil,
 		}
 	}
+
+	accessToken := null.NewString(uuid.NewString(), true)
+	refreshToken := null.NewString(uuid.NewString(), true)
+	currentTime := null.NewTime(time.Now().UTC(), true)
+	accessTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Minute*10), true)
+	refreshTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Hour*24*2), true)
+
+	foundSession := authUseCase.SessionRepository.FindOneByUserId(begin, selectedUser.Id.String)
+	if foundSession != nil {
+		foundSession.AccessToken = accessToken
+		foundSession.RefreshToken = refreshToken
+		foundSession.AccessTokenExpiredAt = accessTokenExpiredAt
+		foundSession.RefreshTokenExpiredAt = refreshTokenExpiredAt
+		foundSession.UpdatedAt = currentTime
+		updatedSession := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
+
+		if updatedSession == nil {
+			rollbackEr := begin.Rollback()
+			if rollbackEr != nil {
+				return &model.Result[*entity.Session]{
+					Code:    http.StatusInternalServerError,
+					Message: "AuthUseCase Login is failed, transaction rollback is failed.",
+					Data:    nil,
+				}
+			}
+			return &model.Result[*entity.Session]{
+				Code:    http.StatusInternalServerError,
+				Message: "AuthUseCase Login is failed, session is not patched.",
+				Data:    nil,
+			}
+		}
+
+		return &model.Result[*entity.Session]{
+			Code:    http.StatusOK,
+			Message: "AuthUseCase Login is succeed.",
+			Data:    updatedSession,
+		}
+	}
+
+	newSession := &entity.Session{
+		Id:                    null.NewString(uuid.NewString(), true),
+		UserId:                selectedUser.Id,
+		AccessToken:           accessToken,
+		RefreshToken:          refreshToken,
+		AccessTokenExpiredAt:  accessTokenExpiredAt,
+		RefreshTokenExpiredAt: refreshTokenExpiredAt,
+		CreatedAt:             currentTime,
+		UpdatedAt:             currentTime,
+		DeletedAt:             null.NewTime(time.Time{}, false),
+	}
+
+	createdSession := authUseCase.SessionRepository.CreateOne(begin, newSession)
+	if createdSession == nil {
+		rollbackEr := begin.Rollback()
+		if rollbackEr != nil {
+			return &model.Result[*entity.Session]{
+				Code:    http.StatusInternalServerError,
+				Message: "AuthUseCase Login is failed, transaction rollback is failed.",
+				Data:    nil,
+			}
+		}
+		return &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "AuthUseCase Login is failed, session is not created.",
+			Data:    nil,
+		}
+	}
+
 	return &model.Result[*entity.Session]{
-		Code:    http.StatusOK,
-		Message: "Login successful",
-		Data:    result.Data,
+		Code:    http.StatusCreated,
+		Message: "AuthUseCase Login is succeed.",
+		Data:    createdSession,
 	}
 }
