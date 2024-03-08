@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"social-media/internal/entity"
-	model_request "social-media/internal/model/request"
+	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"social-media/internal/use_case"
 

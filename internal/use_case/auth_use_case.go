@@ -1,11 +1,11 @@
 package use_case
 
 import (
-	"fmt"
 	"net/http"
 	"social-media/internal/entity"
 	"social-media/internal/model"
-	model_request "social-media/internal/model/request"
+	model_controller "social-media/internal/model/request/controller"
+	model_repository "social-media/internal/model/request/repository"
 	"social-media/internal/repository"
 	"time"
 
@@ -27,7 +27,7 @@ func NewAuthUseCase(
 	return authUseCase
 }
 
-func (authUseCase *AuthUseCase) Register(request *model_request.RegisterRequest) *model.Result[*entity.User] {
+func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) *model.Result[*entity.User] {
 	newUser := &entity.User{
 		Username:  request.Username,
 		Email:     request.Email,
@@ -60,40 +60,64 @@ func (authUseCase *AuthUseCase) Register(request *model_request.RegisterRequest)
 	}
 
 	return &model.Result[*entity.User]{
-		Code:    200,
+		Code:    http.StatusCreated,
 		Message: "AuthUseCase Register is succeed.",
 		Data:    createdUser,
 	}
 }
 
-func (ac *AuthUseCase) Login(request *model_request.LoginRequest) *model.TokenResult {
-	if request.Email.String == "" || request.Password.String == "" {
-		return model.NewTokenResult(http.StatusBadRequest, "Email and password must be provided", "")
-	}
-	user, err := ac.AuthRepository.CheckUser(request.Email.String)
-	if err != nil {
-		return model.NewTokenResult(http.StatusUnauthorized, fmt.Sprintf("User with email %s not found", request.Email.String), "")
-	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password.String), []byte(request.Password.String))
-	if err != nil {
-		return model.NewTokenResult(http.StatusUnauthorized, "Invalid login credentials", "")
-	}
+func (ac *AuthUseCase) Login(request *model_controller.LoginRequest) *model.Result[*entity.Session] {
+	id := uuid.New().String()
 
-	accToken := fmt.Sprintf("%s:%s", user.Id.String, uuid.New().String())
+	accToken := uuid.New().String()
 	if accToken == "" {
-		errMsg := "Failed to create access token"
-		return model.NewTokenResult(http.StatusInternalServerError, errMsg, "")
+		return &model.Result[*entity.Session]{
+			Code:    500,
+			Message: "AuthUseCase Register is failed, password hashing is failed.",
+			Data:    nil,
+		}
 	}
 	accExpiration := time.Now().Add(time.Minute * 15)
 
-	refToken := fmt.Sprintf("%s:%s", user.Id.String, uuid.New().String())
+	refToken := uuid.New().String()
 	if refToken == "" {
-		errMsg := "Failed to create access token"
-		return model.NewTokenResult(http.StatusInternalServerError, errMsg, "")
+		return &model.Result[*entity.Session]{
+			Code:    500,
+			Message: "AuthUseCase Register is failed, password hashing is failed.",
+			Data:    nil,
+		}
 	}
+	currentTime := time.Now()
 	refExpiration := time.Now().Add(time.Hour * 24 * 7)
-	id := uuid.New().String()
-	loginUser := ac.AuthRepository.Login(id, accToken, accExpiration, refToken, refExpiration)
+	repositoryRequest := &model_repository.LoginRepositoryRequest{
+		LoginControllerRequest: request,
+		Session: &entity.Session{
+			ID:                    null.NewString(id, true),
+			AccessToken:           null.NewString(accToken, true),
+			RefreshToken:          null.NewString(refToken, true),
+			AccessTokenExpiredAt:  null.NewTime(accExpiration, true),
+			RefreshTokenExpiredAt: null.NewTime(refExpiration, true),
+			CreatedAt:             null.NewTime(currentTime, true),
+			UpdatedAt:             null.NewTime(currentTime, true),
+			DeletedAt:             null.NewTime(time.Time{}, false),
+		},
+		User: &entity.User{
+			Email:    request.Email,
+			Password: request.Password,
+		},
+	}
 
-	return model.NewTokenResult(http.StatusOK, "Login successful", loginUser)
+	result := ac.AuthRepository.Login(repositoryRequest)
+	if result == nil {
+		return &model.Result[*entity.Session]{
+			Code:    500,
+			Message: "AuthUseCase Register is failed, user is not created.",
+			Data:    nil,
+		}
+	}
+	return &model.Result[*entity.Session]{
+		Code:    http.StatusOK,
+		Message: "Login successful",
+		Data:    result.Data,
+	}
 }

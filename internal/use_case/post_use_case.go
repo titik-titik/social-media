@@ -2,15 +2,16 @@ package use_case
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/guregu/null"
 	"social-media/internal/config"
 	"social-media/internal/entity"
 	"social-media/internal/model/converter"
-	model_request "social-media/internal/model/request"
+	model_controller "social-media/internal/model/request/controller"
 	"social-media/internal/model/response"
 	"social-media/internal/repository"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/guregu/null"
 )
 
 type PostUseCase struct {
@@ -25,7 +26,7 @@ func NewPostUseCase(db *config.DatabaseConfig, postRepository *repository.PostRe
 	}
 }
 
-func (p *PostUseCase) Create(request *model_request.CreatePostRequest) error {
+func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
@@ -52,7 +53,7 @@ func (p *PostUseCase) Create(request *model_request.CreatePostRequest) error {
 	return nil
 }
 
-func (p *PostUseCase) Get(request *model_request.GetPostRequest) (*response.PostResponse, error) {
+func (p *PostUseCase) Get(request *model_controller.GetPostRequest) (*response.PostResponse, error) {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {

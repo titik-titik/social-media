@@ -3,7 +3,7 @@ package use_case
 import (
 	"social-media/internal/entity"
 	"social-media/internal/model"
-	"social-media/internal/model/request"
+	model_request "social-media/internal/model/request/controller"
 	"social-media/internal/repository"
 	"time"
 
@@ -150,7 +150,7 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 	}
 }
 
-func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *request.UserPatchOneByIdRequest) *model.Result[*entity.User] {
+func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *model_request.UserPatchOneByIdRequest) *model.Result[*entity.User] {
 	foundUserResult := userUseCase.FindOneById(id)
 	if foundUserResult.Code != 200 || foundUserResult.Data == nil {
 		return &model.Result[*entity.User]{

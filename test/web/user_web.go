@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"social-media/internal/entity"
-	model_request "social-media/internal/model/request"
+	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"testing"
 
@@ -67,7 +67,13 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData, bodyResponse.Data)
+	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
+	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
@@ -98,7 +104,13 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData, bodyResponse.Data)
+	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
+	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
@@ -129,7 +141,13 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData, bodyResponse.Data)
+	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
+	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
 }
 
 func (userWeb *UserWeb) PatchOneById(t *testing.T) {
@@ -211,5 +229,11 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 		t.Fatal(decodeErr)
 	}
 
-	assert.Equal(t, selectedUserData, bodyResponse.Data)
+	assert.Equal(t, selectedUserData.Id, bodyResponse.Data.Id)
+	assert.Equal(t, selectedUserData.Name, bodyResponse.Data.Name)
+	assert.Equal(t, selectedUserData.Email, bodyResponse.Data.Email)
+	assert.Equal(t, selectedUserData.Username, bodyResponse.Data.Username)
+	assert.NoError(t, bcrypt.CompareHashAndPassword([]byte(bodyResponse.Data.Password.String), []byte(selectedUserData.Password.String)))
+	assert.Equal(t, selectedUserData.AvatarUrl, bodyResponse.Data.AvatarUrl)
+	assert.Equal(t, selectedUserData.Bio, bodyResponse.Data.Bio)
 }

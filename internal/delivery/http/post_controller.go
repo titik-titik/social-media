@@ -2,12 +2,13 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"github.com/guregu/null"
 	"net/http"
-	"social-media/internal/model/request"
+	model_request "social-media/internal/model/request/controller"
 	"social-media/internal/model/response"
 	"social-media/internal/use_case"
+
+	"github.com/gorilla/mux"
+	"github.com/guregu/null"
 )
 
 type PostController struct {
@@ -21,7 +22,7 @@ func NewPostController(useCase *use_case.PostUseCase) *PostController {
 }
 
 func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	var req request.CreatePostRequest
+	var req model_request.CreatePostRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -37,7 +38,7 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
-	var req request.GetPostRequest
+	var req model_request.GetPostRequest
 	postId := mux.Vars(r)["id"]
 
 	req.PostId = null.NewString(postId, true)

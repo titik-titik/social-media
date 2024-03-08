@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	"net/http"
-	model_request "social-media/internal/model/request"
+	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"social-media/internal/use_case"
 )
@@ -25,7 +25,7 @@ func (authController *AuthController) Register(writer http.ResponseWriter, reade
 		panic(decodeErr)
 	}
 	result := authController.AuthUseCase.Register(request)
-	model_response.NewResponse(writer, result.Message, result.Data, http.StatusCreated)
+	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 }
 
 func (authController *AuthController) Login(writer http.ResponseWriter, reader *http.Request) {
@@ -35,5 +35,5 @@ func (authController *AuthController) Login(writer http.ResponseWriter, reader *
 		panic(decodeErr)
 	}
 	result := authController.AuthUseCase.Login(request)
-	model_response.NewResponse(writer, result.Message, result.Data, http.StatusOK)
+	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 }

@@ -5,12 +5,12 @@ import (
 )
 
 type AllSeeder struct {
-	User *User
+	User *UserSeeder
 	Post *PostSeeder
 }
 
 func NewAllSeeder(
-	user *User,
+	user *UserSeeder,
 	post *PostSeeder,
 ) *AllSeeder {
 	allSeeder := &AllSeeder{
