@@ -53,7 +53,7 @@ func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error 
 	return nil
 }
 
-func (p *PostUseCase) Get(request *model_controller.GetPostRequest) (*response.PostResponse, error) {
+func (p *PostUseCase) Find(request *model_controller.GetPostRequest) (*response.PostResponse, error) {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
@@ -62,7 +62,7 @@ func (p *PostUseCase) Get(request *model_controller.GetPostRequest) (*response.P
 
 	post := &entity.Post{}
 
-	if err = p.PostRepository.Get(tx, post, request.PostId); err != nil {
+	if err = p.PostRepository.FindByID(tx, post, request.PostId); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}

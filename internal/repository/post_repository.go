@@ -24,7 +24,7 @@ func (p *PostRepository) Create(db *sql.Tx, post *entity.Post) error {
 	return nil
 }
 
-func (p *PostRepository) Get(db *sql.Tx, post *entity.Post, postId null.String) error {
+func (p *PostRepository) FindByID(db *sql.Tx, post *entity.Post, postId null.String) error {
 	if err := db.QueryRow("SELECT * FROM post WHERE id=$1", postId.String).Scan(&post.Id, &post.ImageUrl, &post.UserId, &post.Description, &post.CreatedAt, &post.UpdatedAt, &post.DeletedAt); err != nil {
 		return errors.New(err.Error())
 	}

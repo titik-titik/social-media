@@ -43,7 +43,7 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 
 	req.PostId = null.NewString(postId, true)
 
-	post, errGet := p.PostUseCase.Get(&req)
+	post, errGet := p.PostUseCase.Find(&req)
 
 	if errGet != nil {
 		http.Error(w, "Failed to get post", http.StatusInternalServerError)
