@@ -20,10 +20,10 @@ func NewRedisManager() *RedisManager {
 		log.Fatalf("error loading .env file: %v", err)
 	}
 
-	redisHost := os.Getenv("GATEWAY_HOST")
-	redisPort := os.Getenv("GATEWAY_REDIS_PORT")
+	redisHost := os.Getenv("REDIS_ONE_HOST")
+	redisPort := os.Getenv("REDIS_ONE_PORT")
 	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
-	password := os.Getenv("GATEWAY_REDIS_PASSWORD")
+	password := os.Getenv("REDIS_ONE_PASSWORD")
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
