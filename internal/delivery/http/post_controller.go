@@ -57,6 +57,7 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 	var req model_request.GetAllPostRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
 	}
 
 	posts, errGet := p.PostUseCase.Get(&req)
