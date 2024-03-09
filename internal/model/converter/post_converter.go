@@ -7,6 +7,7 @@ import (
 
 func PostToResponse(post *entity.Post) *response.PostResponse {
 	return &response.PostResponse{
+		ID:          post.Id,
 		UserId:      post.UserId,
 		ImageUrl:    post.ImageUrl,
 		Description: post.Description,

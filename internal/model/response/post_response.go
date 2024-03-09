@@ -3,6 +3,7 @@ package response
 import "github.com/guregu/null"
 
 type PostResponse struct {
+	ID          null.String `json:"id"`
 	UserId      null.String `json:"user_id"`
 	ImageUrl    null.String `json:"image_url"`
 	Description null.String `json:"description"`

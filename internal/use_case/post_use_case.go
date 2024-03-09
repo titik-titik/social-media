@@ -2,7 +2,6 @@ package use_case
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -65,7 +64,6 @@ func (p *PostUseCase) Find(request *model_controller.GetPostRequest) (*response.
 	post := &entity.Post{}
 
 	if err = p.PostRepository.FindByID(tx, post, request.PostId); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
