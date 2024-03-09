@@ -13,7 +13,7 @@ func main() {
 
 	address := fmt.Sprintf(
 		"%s:%s",
-		webContainer.Env.App.Host,
+		"0.0.0.0",
 		webContainer.Env.App.Port,
 	)
 	listenAndServeErr := http.ListenAndServe(address, webContainer.Route.Router)
