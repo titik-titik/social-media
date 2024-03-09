@@ -1,7 +1,9 @@
 package use_case
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
 	"social-media/internal/model/converter"
@@ -72,4 +74,24 @@ func (p *PostUseCase) Find(request *model_controller.GetPostRequest) (*response.
 	}
 
 	return converter.PostToResponse(post), nil
+}
+
+func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) (*[]response.PostResponse, error) {
+	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
+
+	if err != nil {
+		return nil, errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	posts := new([]entity.Post)
+
+	if err = p.PostRepository.Get(tx, posts, request.Order, request.Limit, request.Offset); err != nil {
+		return nil, errors.New("failed to get all post")
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	return converter.PostToResponses(*posts), nil
 }

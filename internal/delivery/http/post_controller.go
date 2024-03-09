@@ -37,7 +37,7 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	response.NewResponse(w, http.StatusText(http.StatusOK), new(string), http.StatusOK)
 }
 
-func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
+func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
 	var req model_request.GetPostRequest
 	postId := mux.Vars(r)["id"]
 
@@ -51,4 +51,20 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.NewResponse(w, http.StatusText(http.StatusOK), post, http.StatusOK)
+}
+
+func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
+	var req model_request.GetAllPostRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
+	posts, errGet := p.PostUseCase.Get(&req)
+
+	if errGet != nil {
+		http.Error(w, errGet.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response.NewResponse(w, http.StatusText(http.StatusOK), posts, http.StatusOK)
 }

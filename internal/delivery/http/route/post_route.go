@@ -20,7 +20,7 @@ func NewPostRoute(router *mux.Router, postController *http.PostController) *Post
 }
 
 func (postRoute *PostRoute) Register() {
-	postRoute.Router.HandleFunc("/{id}", postRoute.PostController.Get).Methods("GET")
+	postRoute.Router.HandleFunc("/", postRoute.PostController.Get).Methods("GET")
+	postRoute.Router.HandleFunc("/{id}", postRoute.PostController.Find).Methods("GET")
 	postRoute.Router.HandleFunc("/", postRoute.PostController.Create).Methods("POST")
-
 }

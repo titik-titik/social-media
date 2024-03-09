@@ -14,3 +14,13 @@ func PostToResponse(post *entity.Post) *response.PostResponse {
 		UpdatedAt:   post.UpdatedAt,
 	}
 }
+
+func PostToResponses(post []entity.Post) *[]response.PostResponse {
+	posts := make([]response.PostResponse, 0, len(post))
+
+	for i := range posts {
+		posts = append(posts, *PostToResponse(&post[i]))
+	}
+
+	return &posts
+}
