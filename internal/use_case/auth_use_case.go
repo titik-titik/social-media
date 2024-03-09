@@ -1,7 +1,7 @@
 package use_case
 
 import (
-	"github.com/cockroachdb/cockroach-go/v2/crdb"
+	"errors"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -9,6 +9,8 @@ import (
 	model_controller "social-media/internal/model/request/controller"
 	"social-media/internal/repository"
 	"time"
+
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 
 	"github.com/google/uuid"
 	"github.com/guregu/null"
@@ -188,6 +190,47 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 		result = &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
 			Message: "AuthUseCase Login  is failed, " + beginErr.Error(),
+			Data:    nil,
+		}
+	}
+
+	return result
+}
+func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result[*entity.Session]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			return err
+		}
+		defer begin.Rollback()
+
+		foundSession, err := authUseCase.SessionRepository.FindOneByToken(begin, accessToken)
+		if err != nil {
+			return err
+		}
+
+		if foundSession != nil {
+			patchedSession, err := authUseCase.SessionRepository.DeleteOneById(begin, foundSession.Id.String)
+			if err != nil {
+				return err
+			}
+
+			err = begin.Commit()
+			result = &model.Result[*entity.Session]{
+				Code:    http.StatusOK,
+				Message: "Logout is successful.",
+				Data:    patchedSession,
+			}
+			return err
+		}
+
+		return errors.New("session not found")
+	})
+
+	if beginErr != nil {
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "Logout failed: " + beginErr.Error(),
 			Data:    nil,
 		}
 	}

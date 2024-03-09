@@ -153,3 +153,25 @@ func (sessionRepository *SessionRepository) DeleteOneById(begin *sql.Tx, id stri
 	err = nil
 	return result, err
 }
+func (sessionRepository *SessionRepository) FindOneByToken(begin *sql.Tx, accessToken string) (result *entity.Session, err error) {
+	rows, queryErr := begin.Query(
+		"SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM \"session\" WHERE access_token=$1 LIMIT 1;",
+		accessToken,
+	)
+	if queryErr != nil {
+		result = nil
+		err = queryErr
+		return result, err
+	}
+
+	foundSessions := DeserializeSessionRows(rows)
+	if len(foundSessions) == 0 {
+		result = nil
+		err = nil
+		return result, err
+	}
+
+	result = foundSessions[0]
+	err = nil
+	return result, err
+}

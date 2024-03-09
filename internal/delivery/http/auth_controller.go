@@ -6,6 +6,7 @@ import (
 	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"social-media/internal/use_case"
+	"strings"
 )
 
 type AuthController struct {
@@ -35,5 +36,12 @@ func (authController *AuthController) Login(writer http.ResponseWriter, reader *
 		panic(decodeErr)
 	}
 	result := authController.AuthUseCase.Login(request)
+	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+}
+func (authController *AuthController) Logout(writer http.ResponseWriter, reader *http.Request) {
+	request := reader.Header.Get("Authorization")
+	tokenString := strings.Replace(request, "Bearer ", "", 1)
+
+	result := authController.AuthUseCase.Logout(tokenString)
 	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
 }
