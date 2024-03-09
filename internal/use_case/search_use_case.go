@@ -25,80 +25,72 @@ func NewSearchUseCase(
 	return searchUseCase
 }
 
-func (searchUseCase *SearchUseCase) FindAllUser() *model.Result[[]*entity.User] {
-	begin, beginErr := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
-	if beginErr != nil {
-		return &model.Result[[]*entity.User]{
-			Code:    http.StatusInternalServerError,
-			Message: "SearchUserCase FindAllUser is failed, transaction begin is failed.",
-			Data:    nil,
+func (searchUseCase *SearchUseCase) FindAllUser() (result *model.Result[[]*entity.User]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+
+		foundAllUser := searchUseCase.SearchRepository.FindAllUser(begin)
+
+		if foundAllUser == nil {
+			result = &model.Result[[]*entity.User]{
+				Code:    http.StatusNotFound,
+				Message: "SearchUserCase FindAllUser is failed",
+				Data:    nil,
+			}
+			return err
 		}
-	}
 
-	foundAllUser := searchUseCase.SearchRepository.FindAllUser(begin)
-
-	if foundAllUser == nil {
-		return &model.Result[[]*entity.User]{
-			Code:    http.StatusNotFound,
-			Message: "SearchUserCase FindAllUser is failed",
-			Data:    nil,
-		}
-	}
-
-	commitErr := crdb.Execute(func() (err error) {
 		err = begin.Commit()
+		result = &model.Result[[]*entity.User]{
+			Code:    http.StatusOK,
+			Message: "SearchUserCase FindAllUser is succeed.",
+			Data:    foundAllUser,
+		}
 		return err
 	})
-	if commitErr != nil {
-		return &model.Result[[]*entity.User]{
+
+	if beginErr != nil {
+		result = &model.Result[[]*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "SearchUserCase FindAllUser is failed, transaction commit is failed.",
+			Message: "SearchUserCase FindAllUser is failed, transaction is failed.",
 			Data:    nil,
 		}
 	}
 
-	return &model.Result[[]*entity.User]{
-		Code:    http.StatusOK,
-		Message: "SearchUserCase FindAllUser is succeed.",
-		Data:    foundAllUser,
-	}
+	return result
 }
 
-func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) *model.Result[[]*entity.Post] {
-	begin, beginErr := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
-	if beginErr != nil {
-		return &model.Result[[]*entity.Post]{
-			Code:    http.StatusInternalServerError,
-			Message: "SearchPostCase FindAllPostByUserId is failed, transaction begin is failed.",
-			Data:    nil,
+func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *model.Result[[]*entity.Post]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+
+		foundAllPost := searchUseCase.SearchRepository.FindAllPostByUserId(begin, id)
+
+		if foundAllPost == nil {
+			result = &model.Result[[]*entity.Post]{
+				Code:    http.StatusNotFound,
+				Message: "SearchPostCase FindAllPostByUserId is failed",
+				Data:    nil,
+			}
+			return err
 		}
-	}
 
-	foundAllPost := searchUseCase.SearchRepository.FindAllPostByUserId(begin, id)
-
-	if foundAllPost == nil {
-		return &model.Result[[]*entity.Post]{
-			Code:    http.StatusNotFound,
-			Message: "SearchPostCase FindAllPostByUserId is failed",
-			Data:    nil,
-		}
-	}
-
-	commitErr := crdb.Execute(func() (err error) {
 		err = begin.Commit()
+		result = &model.Result[[]*entity.Post]{
+			Code:    http.StatusOK,
+			Message: "SearchPostCase FindAllPostByUserId is succeed",
+			Data:    foundAllPost,
+		}
 		return err
 	})
-	if commitErr != nil {
-		return &model.Result[[]*entity.Post]{
+
+	if beginErr != nil {
+		result = &model.Result[[]*entity.Post]{
 			Code:    http.StatusInternalServerError,
-			Message: "SearchPostCase FindAllPostByUserId is failed, transaction commit is failed.",
+			Message: "SearchPostCase FindAllPostByUserId is failed, transaction is failed.",
 			Data:    nil,
 		}
 	}
 
-	return &model.Result[[]*entity.Post]{
-		Code:    http.StatusOK,
-		Message: "SearchPostCase FindAllPostByUserId is succeed",
-		Data:    foundAllPost,
-	}
+	return result
 }
