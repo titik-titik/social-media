@@ -1,6 +1,7 @@
 package seeder
 
 import (
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"github.com/guregu/null"
 	"golang.org/x/crypto/bcrypt"
 	"social-media/internal/config"
@@ -33,24 +34,31 @@ func (userSeeder *UserSeeder) Up() {
 		if beginErr != nil {
 			panic(beginErr)
 		}
-		_, err := begin.Query(
-			"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
-			user.Id,
-			user.Name,
-			user.Username,
-			user.Email,
-			password,
-			user.AvatarUrl,
-			user.Bio,
-			user.IsVerified,
-			user.CreatedAt,
-			user.UpdatedAt,
-			user.DeletedAt,
-		)
-		if err != nil {
-			panic(err)
+
+		queryErr := crdb.Execute(func() (err error) {
+			_, err = begin.Query(
+				"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
+				user.Id,
+				user.Name,
+				user.Username,
+				user.Email,
+				password,
+				user.AvatarUrl,
+				user.Bio,
+				user.IsVerified,
+				user.CreatedAt,
+				user.UpdatedAt,
+				user.DeletedAt,
+			)
+			return err
+		})
+		if queryErr != nil {
+			panic(queryErr)
 		}
-		commitErr := begin.Commit()
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
 		if commitErr != nil {
 			panic(commitErr)
 		}
@@ -63,14 +71,21 @@ func (userSeeder *UserSeeder) Down() {
 		if beginErr != nil {
 			panic(beginErr)
 		}
-		_, err := begin.Query(
-			"DELETE FROM \"user\" WHERE id = $1 LIMIT 1;",
-			user.Id,
-		)
-		if err != nil {
-			panic(err)
+
+		queryErr := crdb.Execute(func() (err error) {
+			_, err = begin.Query(
+				"DELETE FROM \"user\" WHERE id = $1 LIMIT 1;",
+				user.Id,
+			)
+			return err
+		})
+		if queryErr != nil {
+			panic(queryErr)
 		}
-		commitErr := begin.Commit()
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
 		if commitErr != nil {
 			panic(commitErr)
 		}

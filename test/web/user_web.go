@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"net/http"
 	"social-media/internal/entity"
 	model_request "social-media/internal/model/request/controller"
@@ -224,7 +225,10 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 			t.Fatal(deleteSessionErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
 		if commitErr != nil {
 			t.Fatal(commitErr)
 		}
@@ -248,7 +252,10 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 			t.Fatal(deletePostErr)
 		}
 
-		commitErr := begin.Commit()
+		commitErr := crdb.Execute(func() (err error) {
+			err = begin.Commit()
+			return err
+		})
 		if commitErr != nil {
 			t.Fatal(commitErr)
 		}
