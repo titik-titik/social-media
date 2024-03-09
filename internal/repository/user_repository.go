@@ -39,7 +39,7 @@ func DeserializeUserRows(rows *sql.Rows) []*entity.User {
 	return foundUsers
 }
 
-func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) *entity.User {
+func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) (result *entity.User, err error) {
 	var rows *sql.Rows
 	var queryErr error
 	_ = crdb.Execute(func() error {
@@ -50,172 +50,190 @@ func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) *ent
 		return queryErr
 	})
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return result, err
 	}
 
 	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
-		return nil
+		result = nil
+		err = nil
+		return result, err
 	}
 
-	return foundUsers[0]
+	result = foundUsers[0]
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByUsername(begin *sql.Tx, username string) *entity.User {
-	var rows *sql.Rows
-	queryErr := crdb.Execute(func() (err error) {
-		rows, err = begin.Query(
-			"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 LIMIT 1;",
-			username,
-		)
-		return err
-	})
+func (userRepository *UserRepository) FindOneByUsername(begin *sql.Tx, username string) (result *entity.User, err error) {
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 LIMIT 1;",
+		username,
+	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return result, err
 	}
 
 	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
-		return nil
+		result = nil
+		err = nil
+		return result, err
 	}
 
-	return foundUsers[0]
+	result = foundUsers[0]
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByEmail(begin *sql.Tx, email string) *entity.User {
-	var rows *sql.Rows
-	queryErr := crdb.Execute(func() (err error) {
-		rows, err = begin.Query(
-			"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 LIMIT 1;",
-			email,
-		)
-		return err
-	})
+func (userRepository *UserRepository) FindOneByEmail(begin *sql.Tx, email string) (result *entity.User, err error) {
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 LIMIT 1;",
+		email,
+	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
 	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
-		return nil
+		result = nil
+		err = nil
+		return result, err
 	}
 
-	return foundUsers[0]
+	result = foundUsers[0]
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByEmailAndPassword(begin *sql.Tx, email string, password string) *entity.User {
-	var rows *sql.Rows
-	queryErr := crdb.Execute(func() (err error) {
-		rows, err = begin.Query(
-			"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 AND password=$2 LIMIT 1;",
-			email,
-			password,
-		)
-		return err
-	})
+func (userRepository *UserRepository) FindOneByEmailAndPassword(begin *sql.Tx, email string, password string) (result *entity.User, err error) {
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE email=$1 AND password=$2 LIMIT 1;",
+		email,
+		password,
+	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
 	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
-		return nil
+		result = nil
+		err = nil
+		return result, err
 	}
 
-	return foundUsers[0]
+	result = foundUsers[0]
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin *sql.Tx, username string, password string) *entity.User {
-	var rows *sql.Rows
-	queryErr := crdb.Execute(func() (err error) {
-		rows, err = begin.Query(
-			"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 AND password=$2 LIMIT 1;",
-			username,
-			password,
-		)
-		return err
-	})
+func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin *sql.Tx, username string, password string) (result *entity.User, err error) {
+	rows, queryErr := begin.Query(
+		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM \"user\" WHERE username=$1 AND password=$2 LIMIT 1;",
+		username,
+		password,
+	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
 	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
-		return nil
+		result = nil
+		err = nil
+		return result, err
 	}
 
-	return foundUsers[0]
+	result = foundUsers[0]
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) CreateOne(begin *sql.Tx, toCreateUser *entity.User) *entity.User {
-	queryErr := crdb.Execute(func() (err error) {
-		_, err = begin.Query(
-			"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
-			toCreateUser.Id,
-			toCreateUser.Name,
-			toCreateUser.Username,
-			toCreateUser.Email,
-			toCreateUser.Password,
-			toCreateUser.AvatarUrl,
-			toCreateUser.Bio,
-			toCreateUser.IsVerified,
-			toCreateUser.CreatedAt,
-			toCreateUser.UpdatedAt,
-			toCreateUser.DeletedAt,
-		)
-		return err
-	})
+func (userRepository *UserRepository) CreateOne(begin *sql.Tx, toCreateUser *entity.User) (result *entity.User, err error) {
+	_, queryErr := begin.Query(
+		"INSERT INTO \"user\" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);",
+		toCreateUser.Id,
+		toCreateUser.Name,
+		toCreateUser.Username,
+		toCreateUser.Email,
+		toCreateUser.Password,
+		toCreateUser.AvatarUrl,
+		toCreateUser.Bio,
+		toCreateUser.IsVerified,
+		toCreateUser.CreatedAt,
+		toCreateUser.UpdatedAt,
+		toCreateUser.DeletedAt,
+	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
-	return toCreateUser
+	result = toCreateUser
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) PatchOneById(begin *sql.Tx, id string, toPatchUser *entity.User) *entity.User {
-	queryErr := crdb.Execute(func() (err error) {
-		_, err = begin.Query(
-			"UPDATE \"user\" SET id=$1, name=$2, username=$3, email=$4, password=$5, avatar_url=$6, bio=$7, is_verified=$8, created_at=$9, updated_at=$10, deleted_at=$11 WHERE id = $12 LIMIT 1;",
-			toPatchUser.Id,
-			toPatchUser.Name,
-			toPatchUser.Username,
-			toPatchUser.Email,
-			toPatchUser.Password,
-			toPatchUser.AvatarUrl,
-			toPatchUser.Bio,
-			toPatchUser.IsVerified,
-			toPatchUser.CreatedAt,
-			toPatchUser.UpdatedAt,
-			toPatchUser.DeletedAt,
-			id,
-		)
-		return err
-	})
+func (userRepository *UserRepository) PatchOneById(begin *sql.Tx, id string, toPatchUser *entity.User) (result *entity.User, err error) {
+	_, queryErr := begin.Query(
+		"UPDATE \"user\" SET id=$1, name=$2, username=$3, email=$4, password=$5, avatar_url=$6, bio=$7, is_verified=$8, created_at=$9, updated_at=$10, deleted_at=$11 WHERE id = $12 LIMIT 1;",
+		toPatchUser.Id,
+		toPatchUser.Name,
+		toPatchUser.Username,
+		toPatchUser.Email,
+		toPatchUser.Password,
+		toPatchUser.AvatarUrl,
+		toPatchUser.Bio,
+		toPatchUser.IsVerified,
+		toPatchUser.CreatedAt,
+		toPatchUser.UpdatedAt,
+		toPatchUser.DeletedAt,
+		id,
+	)
 
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
-	return toPatchUser
+	result = toPatchUser
+	err = nil
+	return result, err
 }
 
-func (userRepository *UserRepository) DeleteOneById(begin *sql.Tx, id string) *entity.User {
-	var rows *sql.Rows
-	queryErr := crdb.Execute(func() (err error) {
-		rows, err = begin.Query(
-			"DELETE FROM \"user\" WHERE id=$1 LIMIT 1 RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at;",
-			id,
-		)
-		return err
-	})
+func (userRepository *UserRepository) DeleteOneById(begin *sql.Tx, id string) (result *entity.User, err error) {
+	rows, queryErr := begin.Query(
+		"DELETE FROM \"user\" WHERE id=$1 LIMIT 1 RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at;",
+		id,
+	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
 	foundUsers := DeserializeUserRows(rows)
 	if len(foundUsers) == 0 {
-		return nil
+		result = nil
+		err = nil
+		return result, err
 	}
 
-	return foundUsers[0]
+	result = foundUsers[0]
+	err = nil
+	return result, err
 }

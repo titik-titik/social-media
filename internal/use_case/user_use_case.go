@@ -32,8 +32,15 @@ func NewUserUseCase(
 func (userUseCase *UserUseCase) FindOneById(id string) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		foundUser := userUseCase.UserRepository.FindOneById(begin, id)
+		foundUser, err := userUseCase.UserRepository.FindOneById(begin, id)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -56,7 +63,7 @@ func (userUseCase *UserUseCase) FindOneById(id string) (result *model.Result[*en
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase FindOneById is failed, transaction is failed.",
+			Message: "UserUserCase FindOneById  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -67,7 +74,14 @@ func (userUseCase *UserUseCase) FindOneById(id string) (result *model.Result[*en
 func (userUseCase *UserUseCase) FindOneByUsername(username string) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
-		foundUser := userUseCase.UserRepository.FindOneByUsername(begin, username)
+		if err != nil {
+			result = nil
+			return err
+		}
+		foundUser, err := userUseCase.UserRepository.FindOneByUsername(begin, username)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -90,7 +104,7 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) (result *mode
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase FindOneByUsername is failed, transaction is failed.",
+			Message: "UserUserCase FindOneByUsername  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -101,7 +115,14 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) (result *mode
 func (userUseCase *UserUseCase) FindOneByEmail(email string) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
-		foundUser := userUseCase.UserRepository.FindOneByEmail(begin, email)
+		if err != nil {
+			result = nil
+			return err
+		}
+		foundUser, err := userUseCase.UserRepository.FindOneByEmail(begin, email)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -124,7 +145,7 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) (result *model.Resu
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase FindOneByEmail is failed, transaction is failed.",
+			Message: "UserUserCase FindOneByEmail  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -135,8 +156,15 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) (result *model.Resu
 func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		foundUser := userUseCase.UserRepository.FindOneByEmailAndPassword(begin, email, password)
+		foundUser, err := userUseCase.UserRepository.FindOneByEmailAndPassword(begin, email, password)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -159,7 +187,7 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase FindOneByEmailAndPassword is failed, transaction is failed.",
+			Message: "UserUserCase FindOneByEmailAndPassword  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -170,8 +198,15 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password string) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		foundUser := userUseCase.UserRepository.FindOneByUsernameAndPassword(begin, username, password)
+		foundUser, err := userUseCase.UserRepository.FindOneByUsernameAndPassword(begin, username, password)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -194,7 +229,7 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase FindOneByUsernameAndPassword is failed, transaction is failed.",
+			Message: "UserUserCase FindOneByUsernameAndPassword  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -205,15 +240,13 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		createdUser := userUseCase.UserRepository.CreateOne(begin, toCreateUser)
-		if createdUser == nil {
-			err = begin.Rollback()
-			result = &model.Result[*entity.User]{
-				Code:    http.StatusInternalServerError,
-				Message: "UserUserCase CreateOne is failed, user is not created.",
-				Data:    nil,
-			}
+		createdUser, err := userUseCase.UserRepository.CreateOne(begin, toCreateUser)
+		if err != nil {
 			return err
 		}
 
@@ -229,7 +262,7 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) (result *mo
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase CreateOne is failed, transaction is failed.",
+			Message: "UserUserCase CreateOne  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -240,15 +273,13 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) (result *mo
 func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		patchedUser := userUseCase.UserRepository.PatchOneById(begin, id, toPatchUser)
-		if patchedUser == nil {
-			err = begin.Rollback()
-			result = &model.Result[*entity.User]{
-				Code:    http.StatusInternalServerError,
-				Message: "UserUserCase UserPatchOneByIdRequest is failed, user is not patched.",
-				Data:    nil,
-			}
+		patchedUser, err := userUseCase.UserRepository.PatchOneById(begin, id, toPatchUser)
+		if err != nil {
 			return err
 		}
 
@@ -264,7 +295,7 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase PatchOneById is failed, transaction is failed.",
+			Message: "UserUserCase PatchOneById  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -275,8 +306,15 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *model_request.UserPatchOneByIdRequest) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		foundUser := userUseCase.UserRepository.FindOneById(begin, id)
+		foundUser, err := userUseCase.UserRepository.FindOneById(begin, id)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -317,14 +355,8 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 
 		foundUser.UpdatedAt = null.NewTime(time.Now().UTC(), true)
 
-		patchedUser := userUseCase.UserRepository.PatchOneById(begin, id, foundUser)
-		if patchedUser == nil {
-			err = begin.Rollback()
-			result = &model.Result[*entity.User]{
-				Code:    http.StatusInternalServerError,
-				Message: "UserUserCase PatchOneByIdFromRequest is failed, user is not patched.",
-				Data:    nil,
-			}
+		patchedUser, err := userUseCase.UserRepository.PatchOneById(begin, id, foundUser)
+		if err != nil {
 			return err
 		}
 
@@ -340,7 +372,7 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase PatchOneByIdFromRequest is failed, transaction is failed.",
+			Message: "UserUserCase PatchOneByIdFromRequest  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -351,8 +383,15 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 func (userUseCase *UserUseCase) DeleteOneById(id string) (result *model.Result[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
+		}
 
-		foundUser := userUseCase.UserRepository.FindOneById(begin, id)
+		foundUser, err := userUseCase.UserRepository.FindOneById(begin, id)
+		if err != nil {
+			return err
+		}
 		if foundUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
@@ -363,14 +402,8 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) (result *model.Result[*
 			return err
 		}
 
-		deletedUser := userUseCase.UserRepository.DeleteOneById(begin, id)
-		if deletedUser == nil {
-			err = begin.Rollback()
-			result = &model.Result[*entity.User]{
-				Code:    http.StatusInternalServerError,
-				Message: "UserUserCase DeleteOneById is failed, user is not deleted.",
-				Data:    nil,
-			}
+		deletedUser, err := userUseCase.UserRepository.DeleteOneById(begin, id)
+		if err != nil {
 			return err
 		}
 
@@ -386,7 +419,7 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) (result *model.Result[*
 	if beginErr != nil {
 		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "UserUserCase DeleteOneById is failed, transaction is failed.",
+			Message: "UserUserCase DeleteOneById is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
