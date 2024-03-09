@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/guregu/null"
 	"social-media/internal/entity"
+	"social-media/tool"
 )
 
 type PostRepository struct {
@@ -12,18 +13,6 @@ type PostRepository struct {
 
 func NewPostRepository() *PostRepository {
 	return &PostRepository{}
-}
-
-func deserializePost(rows *sql.Rows, posts *[]entity.Post) error {
-	for rows.Next() {
-		post := new(entity.Post)
-		if err := rows.Scan(&post.Id, &post.ImageUrl, &post.UserId, &post.Description, &post.CreatedAt, &post.UpdatedAt, &post.DeletedAt); err != nil {
-			return err
-		}
-		*posts = append(*posts, *post)
-	}
-
-	return nil
 }
 
 func (p *PostRepository) Create(db *sql.Tx, post *entity.Post) error {
@@ -51,9 +40,7 @@ func (p *PostRepository) Get(db *sql.Tx, posts *[]entity.Post, order string, lim
 		return err
 	}
 
-	if err := deserializePost(rows, posts); err != nil {
-		return err
-	}
+	posts = tool.DeserializeRows(rows, &entity.Post{}).(*[]entity.Post)
 
 	return nil
 }
