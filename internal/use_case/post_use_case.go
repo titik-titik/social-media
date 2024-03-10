@@ -74,7 +74,7 @@ func (p *PostUseCase) Find(request *model_controller.GetPostRequest) (*response.
 	return converter.PostToResponse(post), nil
 }
 
-func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) (*[]response.PostResponse, error) {
+func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) ([]*response.PostResponse, error) {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
@@ -84,14 +84,14 @@ func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) (*[]respon
 	posts := new([]entity.Post)
 
 	if err = p.PostRepository.Get(tx, posts, request.Order, request.Limit, request.Offset); err != nil {
-		return nil, errors.New("failed to get all post")
+		return nil, err
 	}
 
 	if err := tx.Commit(); err != nil {
 		return nil, errors.New(http.StatusText(http.StatusInternalServerError))
 	}
 
-	return converter.PostToResponses(*posts), nil
+	return converter.PostToResponses(posts), nil
 }
 
 func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) error {

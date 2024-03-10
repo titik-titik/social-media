@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/guregu/null"
 	"social-media/internal/entity"
-	"social-media/tool"
 )
 
 type PostRepository struct {
@@ -33,14 +32,37 @@ func (p *PostRepository) FindByID(db *sql.Tx, post *entity.Post, postId null.Str
 	return nil
 }
 
+func DeserializePostRows(rows *sql.Rows, foundPosts *[]entity.Post) error {
+	//var foundPosts []entity.Post
+	for rows.Next() {
+		foundPost := new(entity.Post)
+		scanErr := rows.Scan(
+			&foundPost.Id,
+			&foundPost.UserId,
+			&foundPost.ImageUrl,
+			&foundPost.Description,
+			&foundPost.CreatedAt,
+			&foundPost.UpdatedAt,
+			&foundPost.DeletedAt,
+		)
+		if scanErr != nil {
+			return scanErr
+		}
+		*foundPosts = append(*foundPosts, *foundPost)
+	}
+	return nil
+}
+
 func (p *PostRepository) Get(db *sql.Tx, posts *[]entity.Post, order string, limit int8, offset int64) error {
-	rows, err := db.Query("SELECT id,user_id,image_url,description,created_at,updated_at FROM post ORDER BY $1 limit $2 offset $3", order, limit, offset)
+	rows, err := db.Query("SELECT id,user_id,image_url,description,created_at,updated_at,deleted_at FROM post ORDER BY updated_at DESC LIMIT $1 OFFSET $2", limit, offset)
 
 	if err != nil {
 		return err
 	}
 
-	posts = tool.DeserializeRows(rows, &entity.Post{}).(*[]entity.Post)
+	if err = DeserializePostRows(rows, posts); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -27,7 +27,7 @@ func NewPostWeb(test *testing.T) *PostWeb {
 
 func (p *PostWeb) Start() {
 	p.Test.Run("FindByID", p.FindByID)
-	//p.Test.Run("GetAll", p.GetAll)
+	p.Test.Run("GetAll", p.GetAll)
 	p.Test.Run("UpdatePost", p.Update)
 	p.Test.Run("DeletePost", p.Delete)
 }
@@ -65,42 +65,42 @@ func (p PostWeb) FindByID(t *testing.T) {
 	assert.Equal(t, postMock.Description, bodyResponse.Data.Description)
 }
 
-//func (p PostWeb) GetAll(t *testing.T) {
-//	t.Parallel()
-//
-//	testWeb := GetTestWeb()
-//	testWeb.AllSeeder.Up()
-//	defer testWeb.AllSeeder.Down()
-//
-//	postMock := testWeb.AllSeeder.Post.PostMock.Data
-//	url := fmt.Sprintf("%s/%s", testWeb.Server.URL, p.Path)
-//
-//	request, err := http.NewRequest(http.MethodGet, url, http.NoBody)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	response, err := http.DefaultClient.Do(request)
-//
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	bodyResponse := model_response.Response[[]*model_response.PostResponse]{}
-//	jsonByte, err := ioutil.ReadAll(response.Body)
-//	if err := json.Unmarshal(jsonByte, &bodyResponse); err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	assert.Equal(t, http.StatusOK, response.StatusCode)
-//	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
-//	//assert.Equal(t, postMock, bodyResponse)
-//	for i := 0; i < len(bodyResponse.Data); i++ {
-//		assert.Equal(t, postMock[i].Id, bodyResponse.Data[i].ID)
-//		assert.Equal(t, postMock[i].UserId, bodyResponse.Data[i].UserId)
-//		assert.Equal(t, postMock[i].ImageUrl, bodyResponse.Data[i].ImageUrl)
-//		assert.Equal(t, postMock[i].Description, bodyResponse.Data[i].Description)
-//	}
-//}
+func (p PostWeb) GetAll(t *testing.T) {
+	t.Parallel()
+
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
+
+	url := fmt.Sprintf("%s/%s/", testWeb.Server.URL, p.Path)
+
+	jsonBody := []byte(`{
+    "limit": 10,
+    "offset": 0,
+    "order":"DESC"
+}`)
+	bodyReader := bytes.NewReader(jsonBody)
+	request, err := http.NewRequest(http.MethodGet, url, bodyReader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := http.DefaultClient.Do(request)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bodyResponse := model_response.Response[[]*model_response.PostResponse]{}
+	if err := json.NewDecoder(response.Body).Decode(&bodyResponse); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.Equal(t, bodyResponse.Code, http.StatusOK)
+	assert.Equal(t, bodyResponse.Message, http.StatusText(http.StatusOK))
+	assert.Len(t, bodyResponse.Data, 10)
+}
 
 func (p PostWeb) Update(t *testing.T) {
 	t.Parallel()

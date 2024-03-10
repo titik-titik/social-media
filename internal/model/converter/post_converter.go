@@ -16,12 +16,12 @@ func PostToResponse(post *entity.Post) *response.PostResponse {
 	}
 }
 
-func PostToResponses(post []entity.Post) *[]response.PostResponse {
-	posts := make([]response.PostResponse, 0, len(post))
+func PostToResponses(post *[]entity.Post) []*response.PostResponse {
+	posts := make([]*response.PostResponse, 0, len(*post))
 
-	for i := range posts {
-		posts = append(posts, *PostToResponse(&post[i]))
+	for _, p := range *post {
+		posts = append(posts, PostToResponse(&p))
 	}
 
-	return &posts
+	return posts
 }
