@@ -34,7 +34,10 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)
+	response.NewResponse(w, &response.Response[response.PostResponse]{
+		Message: http.StatusText(http.StatusOK),
+		Code:    http.StatusOK,
+	})
 }
 
 func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +53,11 @@ func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.NewResponse(w, http.StatusText(http.StatusOK), post, http.StatusOK)
+	response.NewResponse(w, &response.Response[response.PostResponse]{
+		Message: http.StatusText(http.StatusOK),
+		Code:    http.StatusOK,
+		Data:    *post,
+	})
 }
 
 func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +74,11 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.NewResponse(w, http.StatusText(http.StatusOK), posts, http.StatusOK)
+	response.NewResponse(w, &response.Response[[]*response.PostResponse]{
+		Message: http.StatusText(http.StatusOK),
+		Code:    http.StatusOK,
+		Data:    posts,
+	})
 }
 
 func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +96,10 @@ func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)
+	response.NewResponse(w, &response.Response[response.PostResponse]{
+		Message: http.StatusText(http.StatusOK),
+		Code:    http.StatusOK,
+	})
 }
 
 func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
@@ -99,5 +113,8 @@ func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)
+	response.NewResponse(w, &response.Response[response.PostResponse]{
+		Message: http.StatusText(http.StatusOK),
+		Code:    http.StatusOK,
+	})
 }

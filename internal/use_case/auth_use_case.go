@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
-	"social-media/internal/model"
 	model_controller "social-media/internal/model/request/controller"
+	"social-media/internal/model/response"
 	"social-media/internal/repository"
 	"time"
 
@@ -36,7 +36,7 @@ func NewAuthUseCase(
 	return authUseCase
 }
 
-func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) (result *model.Result[*entity.User]) {
+func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) (result *response.Response[*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -47,7 +47,7 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 		hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(request.Password.String), bcrypt.DefaultCost)
 		if hashedPasswordErr != nil {
 			err = begin.Rollback()
-			result = &model.Result[*entity.User]{
+			result = &response.Response[*entity.User]{
 				Code:    http.StatusInternalServerError,
 				Message: "AuthUseCase Register is failed, password hashing is failed.",
 				Data:    nil,
@@ -76,7 +76,7 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 		}
 
 		err = begin.Commit()
-		result = &model.Result[*entity.User]{
+		result = &response.Response[*entity.User]{
 			Code:    http.StatusCreated,
 			Message: "AuthUseCase Register is succeed.",
 			Data:    createdUser,
@@ -85,7 +85,7 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 	})
 
 	if beginErr != nil {
-		result = &model.Result[*entity.User]{
+		result = &response.Response[*entity.User]{
 			Code:    http.StatusInternalServerError,
 			Message: "AuthUseCase Register  is failed, " + beginErr.Error(),
 			Data:    nil,
@@ -95,7 +95,7 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 	return result
 }
 
-func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (result *model.Result[*entity.Session]) {
+func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (result *response.Response[*entity.Session]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -110,7 +110,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 
 		if foundUser == nil {
 			err = begin.Rollback()
-			result = &model.Result[*entity.Session]{
+			result = &response.Response[*entity.Session]{
 				Code:    http.StatusNotFound,
 				Message: "AuthUseCase Login is failed, user is not found by email.",
 				Data:    nil,
@@ -121,7 +121,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 		comparePasswordErr := bcrypt.CompareHashAndPassword([]byte(foundUser.Password.String), []byte(request.Password.String))
 		if comparePasswordErr != nil {
 			err = begin.Rollback()
-			result = &model.Result[*entity.Session]{
+			result = &response.Response[*entity.Session]{
 				Code:    http.StatusNotFound,
 				Message: "AuthUseCase Login is failed, password is not match.",
 				Data:    nil,
@@ -152,7 +152,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 			}
 
 			err = begin.Commit()
-			result = &model.Result[*entity.Session]{
+			result = &response.Response[*entity.Session]{
 				Code:    http.StatusOK,
 				Message: "AuthUseCase Login is succeed.",
 				Data:    patchedSession,
@@ -178,7 +178,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 		}
 
 		err = begin.Commit()
-		result = &model.Result[*entity.Session]{
+		result = &response.Response[*entity.Session]{
 			Code:    http.StatusCreated,
 			Message: "AuthUseCase Login is succeed.",
 			Data:    createdSession,
@@ -187,7 +187,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 	})
 
 	if beginErr != nil {
-		result = &model.Result[*entity.Session]{
+		result = &response.Response[*entity.Session]{
 			Code:    http.StatusInternalServerError,
 			Message: "AuthUseCase Login  is failed, " + beginErr.Error(),
 			Data:    nil,
@@ -196,7 +196,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 
 	return result
 }
-func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result[*entity.Session]) {
+func (authUseCase *AuthUseCase) Logout(accessToken string) (result *response.Response[*entity.Session]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -216,7 +216,7 @@ func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result
 			}
 
 			err = begin.Commit()
-			result = &model.Result[*entity.Session]{
+			result = &response.Response[*entity.Session]{
 				Code:    http.StatusOK,
 				Message: "Logout is successful.",
 				Data:    patchedSession,
@@ -228,7 +228,7 @@ func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result
 	})
 
 	if beginErr != nil {
-		result = &model.Result[*entity.Session]{
+		result = &response.Response[*entity.Session]{
 			Code:    http.StatusInternalServerError,
 			Message: "Logout failed: " + beginErr.Error(),
 			Data:    nil,
@@ -238,7 +238,7 @@ func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result
 	return result
 }
 
-func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *model.Result[*entity.Session]) {
+func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *response.Response[*entity.Session]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -269,7 +269,7 @@ func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *
 			return err
 		}
 
-		result = &model.Result[*entity.Session]{
+		result = &response.Response[*entity.Session]{
 			Code:    http.StatusOK,
 			Message: "GetNewAccessToken is successful.",
 			Data:    patchedSession,
@@ -278,7 +278,7 @@ func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *
 	})
 
 	if beginErr != nil {
-		result = &model.Result[*entity.Session]{
+		result = &response.Response[*entity.Session]{
 			Code:    http.StatusInternalServerError,
 			Message: "GetNewAccessToken failed: " + beginErr.Error(),
 			Data:    nil,
