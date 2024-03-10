@@ -353,7 +353,7 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 			foundUser.Bio = request.Bio
 		}
 
-		foundUser.UpdatedAt = null.NewTime(time.Now().UTC(), true)
+		foundUser.UpdatedAt = null.NewTime(time.Now(), true)
 
 		patchedUser, err := userUseCase.UserRepository.PatchOneById(begin, id, foundUser)
 		if err != nil {
@@ -388,22 +388,17 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) (result *model.Result[*
 			return err
 		}
 
-		foundUser, err := userUseCase.UserRepository.FindOneById(begin, id)
+		deletedUser, err := userUseCase.UserRepository.DeleteOneById(begin, id)
 		if err != nil {
 			return err
 		}
-		if foundUser == nil {
+		if deletedUser == nil {
 			err = begin.Rollback()
 			result = &model.Result[*entity.User]{
 				Code:    http.StatusNotFound,
-				Message: "UserUserCase DeleteOneById is failed, user is not found by id.",
+				Message: "UserUserCase DeleteOneById is failed, user is not deleted by id.",
 				Data:    nil,
 			}
-			return err
-		}
-
-		deletedUser, err := userUseCase.UserRepository.DeleteOneById(begin, id)
-		if err != nil {
 			return err
 		}
 

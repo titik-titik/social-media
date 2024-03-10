@@ -39,8 +39,8 @@ func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error 
 		UserId:      null.StringFrom("c9bce534-36a8-43c1-b7d3-071e86673074"),
 		ImageUrl:    request.ImageUrl,
 		Description: request.Description,
-		CreatedAt:   null.NewTime(time.Now().UTC(), true),
-		UpdatedAt:   null.NewTime(time.Now().UTC(), true),
+		CreatedAt:   null.NewTime(time.Now(), true),
+		UpdatedAt:   null.NewTime(time.Now(), true),
 	}
 
 	if err = p.PostRepository.Create(tx, post); err != nil {
@@ -114,7 +114,7 @@ func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) error {
 	post := &entity.Post{
 		Description: request.Description,
 		ImageUrl:    request.ImageUrl,
-		UpdatedAt:   null.NewTime(time.Now().UTC(), true),
+		UpdatedAt:   null.NewTime(time.Now(), true),
 	}
 
 	if err = p.PostRepository.Update(tx, post, request.ID); err != nil {

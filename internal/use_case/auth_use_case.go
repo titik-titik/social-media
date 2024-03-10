@@ -1,7 +1,6 @@
 package use_case
 
 import (
-	"errors"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -55,7 +54,7 @@ func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterReque
 			return err
 		}
 
-		currentTime := null.NewTime(time.Now().UTC(), true)
+		currentTime := null.NewTime(time.Now(), true)
 		newUser := &entity.User{
 			Id:         null.NewString(uuid.NewString(), true),
 			Name:       request.Name,
@@ -131,7 +130,7 @@ func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (r
 
 		accessToken := null.NewString(uuid.NewString(), true)
 		refreshToken := null.NewString(uuid.NewString(), true)
-		currentTime := null.NewTime(time.Now().UTC(), true)
+		currentTime := null.NewTime(time.Now(), true)
 		accessTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Minute*10), true)
 		refreshTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Hour*24*2), true)
 
@@ -202,35 +201,40 @@ func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result
 		if err != nil {
 			return err
 		}
-		defer begin.Rollback()
 
 		foundSession, err := authUseCase.SessionRepository.FindOneByAccToken(begin, accessToken)
 		if err != nil {
 			return err
 		}
 
-		if foundSession != nil {
-			patchedSession, err := authUseCase.SessionRepository.DeleteOneById(begin, foundSession.Id.String)
-			if err != nil {
-				return err
-			}
-
-			err = begin.Commit()
+		if foundSession == nil {
+			err = begin.Rollback()
 			result = &model.Result[*entity.Session]{
-				Code:    http.StatusOK,
-				Message: "Logout is successful.",
-				Data:    patchedSession,
+				Code:    http.StatusNotFound,
+				Message: "AuthUseCase Logout is failed, session is not found by access token.",
+				Data:    nil,
 			}
 			return err
 		}
 
-		return errors.New("session not found")
+		deletedSession, err := authUseCase.SessionRepository.DeleteOneById(begin, foundSession.Id.String)
+		if err != nil {
+			return err
+		}
+
+		err = begin.Commit()
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusOK,
+			Message: "AuthUseCase Logout is succeed.",
+			Data:    deletedSession,
+		}
+		return err
 	})
 
 	if beginErr != nil {
 		result = &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
-			Message: "Logout failed: " + beginErr.Error(),
+			Message: "AuthUseCase Logout  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -244,20 +248,24 @@ func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *
 		if err != nil {
 			return err
 		}
-		defer begin.Rollback()
 
 		foundSession, err := authUseCase.SessionRepository.FindOneByRefToken(begin, refreshToken)
 		if err != nil {
 			return err
 		}
 
-		if foundSession.RefreshTokenExpiredAt.Valid && foundSession.RefreshTokenExpiredAt.Time.Before(time.Now()) {
-			return errors.New("refresh token has expired")
+		if foundSession.RefreshTokenExpiredAt.Time.Before(time.Now()) {
+			err = begin.Rollback()
+			result = &model.Result[*entity.Session]{
+				Code:    http.StatusNotFound,
+				Message: "AuthUseCase GetNewAccessToken is failed, refresh token is expired.",
+				Data:    nil,
+			}
+			return err
+
 		}
 
-		newAccessToken := uuid.New().String()
-
-		foundSession.AccessToken = null.NewString(newAccessToken, true)
+		foundSession.AccessToken = null.NewString(uuid.NewString(), true)
 		foundSession.UpdatedAt = null.NewTime(time.Now(), true)
 		patchedSession, err := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
 		if err != nil {
@@ -265,13 +273,9 @@ func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *
 		}
 
 		err = begin.Commit()
-		if err != nil {
-			return err
-		}
-
 		result = &model.Result[*entity.Session]{
 			Code:    http.StatusOK,
-			Message: "GetNewAccessToken is successful.",
+			Message: "AuthUseCase GetNewAccessToken is succeed.",
 			Data:    patchedSession,
 		}
 		return nil
@@ -280,7 +284,7 @@ func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *
 	if beginErr != nil {
 		result = &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
-			Message: "GetNewAccessToken failed: " + beginErr.Error(),
+			Message: "AuthUseCase GetNewAccessToken is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}

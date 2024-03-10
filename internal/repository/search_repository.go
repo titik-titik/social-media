@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"social-media/internal/entity"
-	"social-media/tool"
 )
 
 type SearchRepository struct {
@@ -32,18 +31,16 @@ func (searchRepository *SearchRepository) FindAllUser(begin *sql.Tx) (result []*
 }
 
 func (searchRepository *SearchRepository) FindAllPostByUserId(begin *sql.Tx, id string) (result []*entity.Post, err error) {
-	rows, queryErr := begin.Query(
+	_, queryErr := begin.Query(
 		"SELECT id, user_id, description, image_url, created_at, updated_at, deleted_at FROM \"post\" where user_id = ? LIMIT 1", id,
 	)
 	if queryErr != nil {
 		result = nil
 		err = queryErr
-		return
+		return result, err
 	}
 
-	foundAllPosts := tool.DeserializeRows(rows, &entity.Post{}).([]*entity.Post)
-
-	result = foundAllPosts
+	result = nil
 	err = nil
 	return result, err
 }

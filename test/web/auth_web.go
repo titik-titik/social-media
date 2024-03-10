@@ -128,24 +128,24 @@ func (authWeb *AuthWeb) Logout(t *testing.T) {
 
 	testWeb := GetTestWeb()
 	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
 
 	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
-	logoutURL := fmt.Sprintf("%s/%s/logout", testWeb.Server.URL, authWeb.Path)
-	logoutRequest, newLogoutRequestErr := http.NewRequest(http.MethodPost, logoutURL, nil)
-	if newLogoutRequestErr != nil {
-		t.Fatal(newLogoutRequestErr)
+	url := fmt.Sprintf("%s/%s/logout", testWeb.Server.URL, authWeb.Path)
+	request, newRequestErr := http.NewRequest(http.MethodPost, url, nil)
+	if newRequestErr != nil {
+		t.Fatal(newRequestErr)
 	}
 
-	accessToken := selectedSessionMock.AccessToken
-	logoutRequest.Header.Set("Authorization", "Bearer "+accessToken.String)
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 
-	logoutResponse, logoutDoErr := http.DefaultClient.Do(logoutRequest)
-	if logoutDoErr != nil {
-		t.Fatal(logoutDoErr)
+	response, doErr := http.DefaultClient.Do(request)
+	if doErr != nil {
+		t.Fatal(doErr)
 	}
-	defer logoutResponse.Body.Close()
 
-	assert.Equal(t, http.StatusOK, logoutResponse.StatusCode)
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 }
 func (authWeb *AuthWeb) GetNewAccessToken(t *testing.T) {
 	t.Parallel()
@@ -155,20 +155,26 @@ func (authWeb *AuthWeb) GetNewAccessToken(t *testing.T) {
 	defer testWeb.AllSeeder.Down()
 
 	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
-	newAccessTokenURL := fmt.Sprintf("%s/%s/getNewAccessToken", testWeb.Server.URL, authWeb.Path)
-	newAccessTokenRequest, newAccessTokenRequestErr := http.NewRequest(http.MethodPost, newAccessTokenURL, nil)
-	if newAccessTokenRequestErr != nil {
-		t.Fatal(newAccessTokenRequestErr)
+	url := fmt.Sprintf("%s/%s/access-token", testWeb.Server.URL, authWeb.Path)
+	request, newRequest := http.NewRequest(http.MethodPost, url, nil)
+	if newRequest != nil {
+		t.Fatal(newRequest)
 	}
 
-	refreshToken := selectedSessionMock.RefreshToken
-	newAccessTokenRequest.Header.Set("Authorization", "Bearer "+refreshToken.String)
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.RefreshToken.String)
 
-	newAccessTokenResponse, newAccessTokenDoErr := http.DefaultClient.Do(newAccessTokenRequest)
-	if newAccessTokenDoErr != nil {
-		t.Fatal(newAccessTokenDoErr)
+	response, doErr := http.DefaultClient.Do(request)
+	if doErr != nil {
+		t.Fatal(doErr)
 	}
-	defer newAccessTokenResponse.Body.Close()
 
-	assert.Equal(t, http.StatusOK, newAccessTokenResponse.StatusCode)
+	responseBody := &model_response.Response[*entity.Session]{}
+	decodeErr := json.NewDecoder(response.Body).Decode(responseBody)
+	if decodeErr != nil {
+		t.Fatal(decodeErr)
+	}
+
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
+	assert.True(t, selectedSessionMock.UpdatedAt.Time.Before(responseBody.Data.UpdatedAt.Time))
 }

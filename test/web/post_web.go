@@ -169,7 +169,7 @@ func (p PostWeb) Update(t *testing.T) {
 	assert.Equal(t, postMock.UserId, bodyResponseGetUpdate.Data.UserId)
 	assert.Equal(t, newPost.ImageUrl, bodyResponseGetUpdate.Data.ImageUrl)
 	assert.Equal(t, newPost.Description, bodyResponseGetUpdate.Data.Description)
-	assert.NotEqual(t, postMock.UpdatedAt.Time.UTC(), bodyResponseGetUpdate.Data.UpdatedAt.Time.UTC())
+	assert.True(t, postMock.UpdatedAt.Time.Before(bodyResponseGetUpdate.Data.UpdatedAt.Time))
 }
 
 func (p PostWeb) Delete(t *testing.T) {

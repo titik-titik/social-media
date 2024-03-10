@@ -16,7 +16,12 @@ type SessionMock struct {
 func NewSessionMock(
 	userMock *UserMock,
 ) *SessionMock {
-	currentTime := time.Now().UTC()
+	currentTime := time.Now()
+	currentTimeRfc3339 := currentTime.Format(time.RFC3339)
+	currentTimeFromRfc3339, parseErr := time.Parse(time.RFC3339, currentTimeRfc3339)
+	if parseErr != nil {
+		panic(parseErr)
+	}
 	sessionMock := &SessionMock{
 		UserMock: userMock,
 		Data: []*entity.Session{
@@ -25,10 +30,10 @@ func NewSessionMock(
 				UserId:                null.NewString(userMock.Data[0].Id.String, true),
 				AccessToken:           null.NewString(uuid.NewString(), true),
 				RefreshToken:          null.NewString(uuid.NewString(), true),
-				AccessTokenExpiredAt:  null.NewTime(currentTime.Add(time.Minute*10), true),
-				RefreshTokenExpiredAt: null.NewTime(currentTime.Add(time.Hour*24*2), true),
-				CreatedAt:             null.NewTime(currentTime.Add(time.Second*0), true),
-				UpdatedAt:             null.NewTime(currentTime.Add(time.Second*0), true),
+				AccessTokenExpiredAt:  null.NewTime(currentTimeFromRfc3339.Add(time.Minute*10), true),
+				RefreshTokenExpiredAt: null.NewTime(currentTimeFromRfc3339.Add(time.Hour*24*2), true),
+				CreatedAt:             null.NewTime(currentTimeFromRfc3339.Add(time.Second*0), true),
+				UpdatedAt:             null.NewTime(currentTimeFromRfc3339.Add(time.Second*0), true),
 				DeletedAt:             null.NewTime(time.Time{}, false),
 			},
 			{
@@ -36,10 +41,10 @@ func NewSessionMock(
 				UserId:                null.NewString(userMock.Data[1].Id.String, true),
 				AccessToken:           null.NewString(uuid.NewString(), true),
 				RefreshToken:          null.NewString(uuid.NewString(), true),
-				AccessTokenExpiredAt:  null.NewTime(currentTime.Add(time.Minute*10), true),
-				RefreshTokenExpiredAt: null.NewTime(currentTime.Add(time.Hour*24*2), true),
-				CreatedAt:             null.NewTime(currentTime.Add(time.Second*0), true),
-				UpdatedAt:             null.NewTime(currentTime.Add(time.Second*0), true),
+				AccessTokenExpiredAt:  null.NewTime(currentTimeFromRfc3339.Add(time.Minute*10), true),
+				RefreshTokenExpiredAt: null.NewTime(currentTimeFromRfc3339.Add(time.Hour*24*2), true),
+				CreatedAt:             null.NewTime(currentTimeFromRfc3339.Add(time.Second*0), true),
+				UpdatedAt:             null.NewTime(currentTimeFromRfc3339.Add(time.Second*0), true),
 				DeletedAt:             null.NewTime(time.Time{}, false),
 			},
 		},
