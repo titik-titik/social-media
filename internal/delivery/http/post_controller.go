@@ -22,14 +22,14 @@ func NewPostController(useCase *use_case.PostUseCase) *PostController {
 }
 
 func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
-	var req model_request.CreatePostRequest
+	req := new(model_request.CreatePostRequest)
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if err := p.PostUseCase.Create(&req); err != nil {
+	if err := p.PostUseCase.Create(req); err != nil {
 		http.Error(w, "Failed to create new post", http.StatusInternalServerError)
 		return
 	}
@@ -38,12 +38,12 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
-	var req model_request.GetPostRequest
+	req := new(model_request.GetPostRequest)
 	postId := mux.Vars(r)["id"]
 
 	req.PostId = null.NewString(postId, true)
 
-	post, errGet := p.PostUseCase.Find(&req)
+	post, errGet := p.PostUseCase.Find(req)
 
 	if errGet != nil {
 		http.Error(w, "Failed to get post", http.StatusInternalServerError)
@@ -54,13 +54,13 @@ func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
-	var req model_request.GetAllPostRequest
+	req := new(model_request.GetAllPostRequest)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
-	posts, errGet := p.PostUseCase.Get(&req)
+	posts, errGet := p.PostUseCase.Get(req)
 
 	if errGet != nil {
 		http.Error(w, errGet.Error(), http.StatusInternalServerError)
@@ -71,7 +71,7 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
-	var req model_request.UpdatePostRequest
+	req := new(model_request.UpdatePostRequest)
 	postId := mux.Vars(r)["id"]
 
 	req.ID = postId
@@ -81,7 +81,7 @@ func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := p.PostUseCase.Update(&req); err != nil {
+	if err := p.PostUseCase.Update(req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -89,12 +89,12 @@ func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
-	var req model_request.DeletePostRequest
+	req := new(model_request.DeletePostRequest)
 	postId := mux.Vars(r)["id"]
 
 	req.ID = postId
 
-	if err := p.PostUseCase.Delete(&req); err != nil {
+	if err := p.PostUseCase.Delete(req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
