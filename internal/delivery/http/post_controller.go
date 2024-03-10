@@ -34,7 +34,7 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.NewResponse(w, http.StatusText(http.StatusOK), new(string), http.StatusOK)
+	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)
 }
 
 func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
@@ -68,4 +68,32 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.NewResponse(w, http.StatusText(http.StatusOK), posts, http.StatusOK)
+}
+
+func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
+	var req model_request.UpdatePostRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	if err := p.PostUseCase.Update(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)
+}
+
+func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
+	var req model_request.DeletePostRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	if err := p.PostUseCase.Delete(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)
 }
