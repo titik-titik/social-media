@@ -72,6 +72,10 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 
 func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
 	var req model_request.UpdatePostRequest
+	postId := mux.Vars(r)["id"]
+
+	req.ID = postId
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
@@ -86,6 +90,10 @@ func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
 
 func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	var req model_request.DeletePostRequest
+	postId := mux.Vars(r)["id"]
+
+	req.ID = postId
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
