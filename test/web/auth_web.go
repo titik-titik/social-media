@@ -33,6 +33,7 @@ func (authWeb *AuthWeb) Start() {
 	authWeb.Test.Run("AuthWeb_Register_Succeed", authWeb.Register)
 	authWeb.Test.Run("AuthWeb_Login_Succeed", authWeb.Login)
 	authWeb.Test.Run("AuthWeb_Logout_Succeed", authWeb.Logout)
+	authWeb.Test.Run("AuthWeb_GetNewAccessToken_Succeed", authWeb.GetNewAccessToken)
 }
 
 func (authWeb *AuthWeb) Register(t *testing.T) {
@@ -145,4 +146,29 @@ func (authWeb *AuthWeb) Logout(t *testing.T) {
 	defer logoutResponse.Body.Close()
 
 	assert.Equal(t, http.StatusOK, logoutResponse.StatusCode)
+}
+func (authWeb *AuthWeb) GetNewAccessToken(t *testing.T) {
+	t.Parallel()
+
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+	defer testWeb.AllSeeder.Down()
+
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	newAccessTokenURL := fmt.Sprintf("%s/%s/getNewAccessToken", testWeb.Server.URL, authWeb.Path)
+	newAccessTokenRequest, newAccessTokenRequestErr := http.NewRequest(http.MethodPost, newAccessTokenURL, nil)
+	if newAccessTokenRequestErr != nil {
+		t.Fatal(newAccessTokenRequestErr)
+	}
+
+	refreshToken := selectedSessionMock.RefreshToken
+	newAccessTokenRequest.Header.Set("Authorization", "Bearer "+refreshToken.String)
+
+	newAccessTokenResponse, newAccessTokenDoErr := http.DefaultClient.Do(newAccessTokenRequest)
+	if newAccessTokenDoErr != nil {
+		t.Fatal(newAccessTokenDoErr)
+	}
+	defer newAccessTokenResponse.Body.Close()
+
+	assert.Equal(t, http.StatusOK, newAccessTokenResponse.StatusCode)
 }
