@@ -12,10 +12,17 @@ type GetPostRequest struct {
 }
 
 type GetAllPostRequest struct {
-	UserId null.String `json:"user_id"`
+	Limit  int8   `json:"limit,omitempty"`
+	Offset int64  `json:"offset,omitempty"`
+	Order  string `json:"order,omitempty"`
 }
 
 type UpdatePostRequest struct {
+	ID          string      `json:"-"`
 	ImageUrl    null.String `json:"image_url"`
 	Description null.String `json:"description"`
+}
+
+type DeletePostRequest struct {
+	ID string `json:"-"`
 }

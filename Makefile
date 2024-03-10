@@ -1,3 +1,4 @@
+# CI/CD docker command
 build-development:
 	docker compose -f ./docker/development/docker-compose.yml build --no-cache
 
@@ -24,3 +25,17 @@ start-production:
 
 stop-production:
 	docker compose -f ./docker/production/docker-compose.yml down
+
+# start local development
+start-local:
+	go run cmd/web/main.go
+
+start-local-env:
+	 GATEWAY_HOST=127.0.0.1 GATEWAY_APP_PORT=8001 go run cmd/web/main.go
+
+# start all test
+start-test:
+	go test -v ./test/*
+
+start-test-env:
+	 GATEWAY_HOST=127.0.0.1 GATEWAY_APP_PORT=8001 go test -v ./test/*

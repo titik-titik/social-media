@@ -29,5 +29,5 @@ func NewRootRoute(
 func (rootRoute *RootRoute) Register() {
 	rootRoute.UserRoute.Register()
 	rootRoute.AuthRoute.Register()
-	// rootRoute.PostRoute.Register()
+	rootRoute.PostRoute.Register()
 }

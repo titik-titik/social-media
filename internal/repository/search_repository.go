@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"social-media/internal/entity"
+	"social-media/tool"
 )
 
 type SearchRepository struct {
@@ -40,7 +41,7 @@ func (searchRepository *SearchRepository) FindAllPostByUserId(begin *sql.Tx, id 
 		return
 	}
 
-	foundAllPosts := DeserializePostRows(rows)
+	foundAllPosts := tool.DeserializeRows(rows, &entity.Post{}).([]*entity.Post)
 
 	result = foundAllPosts
 	err = nil
