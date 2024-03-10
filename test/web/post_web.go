@@ -179,7 +179,7 @@ func (p PostWeb) Delete(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	postMock := testWeb.AllSeeder.Post.PostMock.Data[0]
+	postMock := testWeb.AllSeeder.Post.PostMock.Data[1]
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, p.Path, postMock.Id.String)
 
 	request, err := http.NewRequest(http.MethodDelete, url, http.NoBody)

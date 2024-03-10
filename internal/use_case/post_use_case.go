@@ -1,7 +1,6 @@
 package use_case
 
 import (
-	"errors"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -27,11 +26,14 @@ func NewPostUseCase(db *config.DatabaseConfig, postRepository *repository.PostRe
 	}
 }
 
-func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error {
+func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) *response.Response[*response.PostResponse] {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
-		panic(err)
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	post := &entity.Post{
@@ -44,17 +46,26 @@ func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) error 
 	}
 
 	if err = p.PostRepository.Create(tx, post); err != nil {
-		return err
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		panic(err)
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
-	return nil
+	return &response.Response[*response.PostResponse]{
+		Code:    http.StatusOK,
+		Message: http.StatusText(http.StatusOK),
+	}
 }
 
-func (p *PostUseCase) Find(request *model_controller.GetPostRequest) (*response.PostResponse, error) {
+func (p *PostUseCase) Find(request *model_controller.GetPostRequest) *response.Response[*response.PostResponse] {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
@@ -64,51 +75,80 @@ func (p *PostUseCase) Find(request *model_controller.GetPostRequest) (*response.
 	post := &entity.Post{}
 
 	if err = p.PostRepository.FindByID(tx, post, request.PostId); err != nil {
-		return nil, err
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
 		panic(err)
 	}
 
-	return converter.PostToResponse(post), nil
+	return &response.Response[*response.PostResponse]{
+		Code:    http.StatusOK,
+		Message: http.StatusText(http.StatusOK),
+		Data:    converter.PostToResponse(post),
+	}
 }
 
-func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) ([]*response.PostResponse, error) {
+func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) *response.Response[[]*response.PostResponse] {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
-		return nil, errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[[]*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	posts := new([]entity.Post)
 
 	if err = p.PostRepository.Get(tx, posts, request.Order, request.Limit, request.Offset); err != nil {
-		return nil, err
+		return &response.Response[[]*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[[]*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
-	return converter.PostToResponses(posts), nil
+	return &response.Response[[]*response.PostResponse]{
+		Code:    http.StatusOK,
+		Message: http.StatusText(http.StatusOK),
+		Data:    converter.PostToResponses(posts),
+	}
 }
 
-func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) error {
+func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) *response.Response[*response.PostResponse] {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	total, err := p.PostRepository.CountByID(tx, request.ID)
 
 	if err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if total < 0 {
-		return errors.New(http.StatusText(http.StatusNotFound))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusNotFound,
+			Message: http.StatusText(http.StatusNotFound),
+		}
 	}
 
 	post := &entity.Post{
@@ -118,40 +158,67 @@ func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) error {
 	}
 
 	if err = p.PostRepository.Update(tx, post, request.ID); err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
-	return nil
+	return &response.Response[*response.PostResponse]{
+		Code:    http.StatusOK,
+		Message: http.StatusText(http.StatusOK),
+	}
 }
 
-func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) error {
+func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) *response.Response[*response.PostResponse] {
 	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
 
 	if err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	total, err := p.PostRepository.CountByID(tx, request.ID)
 
 	if err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if total < 0 {
-		return errors.New(http.StatusText(http.StatusNotFound))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusNotFound,
+			Message: http.StatusText(http.StatusNotFound),
+		}
 	}
 
 	if err = p.PostRepository.Delete(tx, request.ID); err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.New(http.StatusText(http.StatusInternalServerError))
+		return &response.Response[*response.PostResponse]{
+			Code:    http.StatusInternalServerError,
+			Message: http.StatusText(http.StatusInternalServerError),
+		}
 	}
 
-	return nil
+	return &response.Response[*response.PostResponse]{
+		Code:    http.StatusOK,
+		Message: http.StatusText(http.StatusOK),
+	}
 }
