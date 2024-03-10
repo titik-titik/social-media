@@ -18,6 +18,11 @@ type GetAllPostRequest struct {
 }
 
 type UpdatePostRequest struct {
+	ID          string      `json:"-"`
 	ImageUrl    null.String `json:"image_url"`
 	Description null.String `json:"description"`
+}
+
+type DeletePostRequest struct {
+	ID string `json:"-"`
 }

@@ -93,3 +93,55 @@ func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) (*[]respon
 
 	return converter.PostToResponses(*posts), nil
 }
+
+func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) error {
+	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
+
+	if err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	total, err := p.PostRepository.CountByID(tx, request.ID)
+
+	if err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	if total < 0 {
+		return errors.New(http.StatusText(http.StatusNotFound))
+	}
+
+	post := &entity.Post{
+		Description: request.Description,
+		ImageUrl:    request.ImageUrl,
+		UpdatedAt:   null.NewTime(time.Now(), true),
+	}
+
+	if err = p.PostRepository.Update(tx, post, request.ID); err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	return nil
+}
+
+func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) error {
+	tx, err := p.DB.CockroachdbDatabase.Connection.Begin()
+
+	if err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	if err = p.PostRepository.Delete(tx, request.ID); err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.New(http.StatusText(http.StatusInternalServerError))
+	}
+
+	return nil
+}

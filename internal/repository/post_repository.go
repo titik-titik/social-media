@@ -64,3 +64,13 @@ func (p PostRepository) Delete(db *sql.Tx, postID string) error {
 
 	return nil
 }
+
+func (p PostRepository) CountByID(db *sql.Tx, postID string) (int64, error) {
+	var total int64
+
+	if err := db.QueryRow("SELECT COUNT('id') FROM post WHERE id = $1", postID).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
