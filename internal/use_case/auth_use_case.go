@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"errors"
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
@@ -8,6 +9,8 @@ import (
 	model_controller "social-media/internal/model/request/controller"
 	"social-media/internal/repository"
 	"time"
+
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 
 	"github.com/google/uuid"
 	"github.com/guregu/null"
@@ -33,168 +36,254 @@ func NewAuthUseCase(
 	return authUseCase
 }
 
-func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) *model.Result[*entity.User] {
-	begin, beginErr := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
-	if beginErr != nil {
-		return &model.Result[*entity.User]{
-			Code:    http.StatusInternalServerError,
-			Message: "AuthUseCase Register is failed, transaction begin is failed.",
-			Data:    nil,
+func (authUseCase *AuthUseCase) Register(request *model_controller.RegisterRequest) (result *model.Result[*entity.User]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
 		}
-	}
 
-	newUser := &entity.User{
-		Username:  request.Username,
-		Email:     request.Email,
-		Password:  request.Password,
-		CreatedAt: null.NewTime(time.Now().UTC(), true),
-		UpdatedAt: null.NewTime(time.Now().UTC(), true),
-	}
-
-	hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(request.Password.String), bcrypt.DefaultCost)
-	if hashedPasswordErr != nil {
-		return &model.Result[*entity.User]{
-			Code:    http.StatusInternalServerError,
-			Message: "AuthUseCase Register is failed, password hashing is failed.",
-			Data:    nil,
-		}
-	}
-	newUser.Password = null.NewString(string(hashedPassword), true)
-
-	newUUId := uuid.New()
-
-	newUser.Id = null.NewString(newUUId.String(), true)
-
-	createdUser := authUseCase.UserRepository.CreateOne(begin, newUser)
-	if createdUser == nil {
-		rollbackEr := begin.Rollback()
-		if rollbackEr != nil {
-			return &model.Result[*entity.User]{
+		hashedPassword, hashedPasswordErr := bcrypt.GenerateFromPassword([]byte(request.Password.String), bcrypt.DefaultCost)
+		if hashedPasswordErr != nil {
+			err = begin.Rollback()
+			result = &model.Result[*entity.User]{
 				Code:    http.StatusInternalServerError,
-				Message: "AuthUseCase Register is failed, transaction rollback is failed.",
+				Message: "AuthUseCase Register is failed, password hashing is failed.",
 				Data:    nil,
 			}
+			return err
 		}
-		return &model.Result[*entity.User]{
+
+		currentTime := null.NewTime(time.Now().UTC(), true)
+		newUser := &entity.User{
+			Id:         null.NewString(uuid.NewString(), true),
+			Name:       request.Name,
+			Username:   request.Username,
+			Email:      request.Email,
+			Password:   null.NewString(string(hashedPassword), true),
+			AvatarUrl:  null.NewString("", false),
+			Bio:        null.NewString("", false),
+			IsVerified: null.NewBool(false, false),
+			CreatedAt:  currentTime,
+			UpdatedAt:  currentTime,
+			DeletedAt:  null.NewTime(time.Time{}, false),
+		}
+
+		createdUser, err := authUseCase.UserRepository.CreateOne(begin, newUser)
+		if err != nil {
+			return err
+		}
+
+		err = begin.Commit()
+		result = &model.Result[*entity.User]{
+			Code:    http.StatusCreated,
+			Message: "AuthUseCase Register is succeed.",
+			Data:    createdUser,
+		}
+		return err
+	})
+
+	if beginErr != nil {
+		result = &model.Result[*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "AuthUseCase Register is failed, user is not created.",
+			Message: "AuthUseCase Register  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
 
-	return &model.Result[*entity.User]{
-		Code:    http.StatusCreated,
-		Message: "AuthUseCase Register is succeed.",
-		Data:    createdUser,
-	}
+	return result
 }
 
-func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) *model.Result[*entity.Session] {
-	begin, beginErr := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
-	if beginErr != nil {
-		return &model.Result[*entity.Session]{
-			Code:    http.StatusInternalServerError,
-			Message: "AuthUseCase Login is failed, transaction begin is failed.",
-			Data:    nil,
+func (authUseCase *AuthUseCase) Login(request *model_controller.LoginRequest) (result *model.Result[*entity.Session]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			result = nil
+			return err
 		}
-	}
 
-	selectedUser := authUseCase.UserRepository.FindOneByEmail(begin, request.Email.String)
-	if selectedUser == nil {
-		rollbackEr := begin.Rollback()
-		if rollbackEr != nil {
-			return &model.Result[*entity.Session]{
-				Code:    http.StatusInternalServerError,
-				Message: "AuthUseCase Login is failed, transaction rollback is failed.",
+		foundUser, err := authUseCase.UserRepository.FindOneByEmail(begin, request.Email.String)
+		if err != nil {
+			return err
+		}
+
+		if foundUser == nil {
+			err = begin.Rollback()
+			result = &model.Result[*entity.Session]{
+				Code:    http.StatusNotFound,
+				Message: "AuthUseCase Login is failed, user is not found by email.",
 				Data:    nil,
 			}
+			return err
 		}
-		return &model.Result[*entity.Session]{
-			Code:    http.StatusNotFound,
-			Message: "AuthUseCase Login is failed, user is not found by email.",
-			Data:    nil,
-		}
-	}
 
-	comparePasswordErr := bcrypt.CompareHashAndPassword([]byte(selectedUser.Password.String), []byte(request.Password.String))
-	if comparePasswordErr != nil {
-		return &model.Result[*entity.Session]{
-			Code:    http.StatusNotFound,
-			Message: "AuthUseCase Login is failed, password is not match.",
-			Data:    nil,
-		}
-	}
-
-	accessToken := null.NewString(uuid.NewString(), true)
-	refreshToken := null.NewString(uuid.NewString(), true)
-	currentTime := null.NewTime(time.Now().UTC(), true)
-	accessTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Minute*10), true)
-	refreshTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Hour*24*2), true)
-
-	foundSession := authUseCase.SessionRepository.FindOneByUserId(begin, selectedUser.Id.String)
-	if foundSession != nil {
-		foundSession.AccessToken = accessToken
-		foundSession.RefreshToken = refreshToken
-		foundSession.AccessTokenExpiredAt = accessTokenExpiredAt
-		foundSession.RefreshTokenExpiredAt = refreshTokenExpiredAt
-		foundSession.UpdatedAt = currentTime
-		updatedSession := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
-
-		if updatedSession == nil {
-			rollbackEr := begin.Rollback()
-			if rollbackEr != nil {
-				return &model.Result[*entity.Session]{
-					Code:    http.StatusInternalServerError,
-					Message: "AuthUseCase Login is failed, transaction rollback is failed.",
-					Data:    nil,
-				}
-			}
-			return &model.Result[*entity.Session]{
-				Code:    http.StatusInternalServerError,
-				Message: "AuthUseCase Login is failed, session is not patched.",
+		comparePasswordErr := bcrypt.CompareHashAndPassword([]byte(foundUser.Password.String), []byte(request.Password.String))
+		if comparePasswordErr != nil {
+			err = begin.Rollback()
+			result = &model.Result[*entity.Session]{
+				Code:    http.StatusNotFound,
+				Message: "AuthUseCase Login is failed, password is not match.",
 				Data:    nil,
 			}
+			return err
 		}
 
-		return &model.Result[*entity.Session]{
-			Code:    http.StatusOK,
+		accessToken := null.NewString(uuid.NewString(), true)
+		refreshToken := null.NewString(uuid.NewString(), true)
+		currentTime := null.NewTime(time.Now().UTC(), true)
+		accessTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Minute*10), true)
+		refreshTokenExpiredAt := null.NewTime(currentTime.Time.Add(time.Hour*24*2), true)
+
+		foundSession, err := authUseCase.SessionRepository.FindOneByUserId(begin, foundUser.Id.String)
+		if err != nil {
+			return err
+		}
+
+		if foundSession != nil {
+			foundSession.AccessToken = accessToken
+			foundSession.RefreshToken = refreshToken
+			foundSession.AccessTokenExpiredAt = accessTokenExpiredAt
+			foundSession.RefreshTokenExpiredAt = refreshTokenExpiredAt
+			foundSession.UpdatedAt = currentTime
+			patchedSession, err := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
+			if err != nil {
+				return err
+			}
+
+			err = begin.Commit()
+			result = &model.Result[*entity.Session]{
+				Code:    http.StatusOK,
+				Message: "AuthUseCase Login is succeed.",
+				Data:    patchedSession,
+			}
+			return err
+		}
+
+		newSession := &entity.Session{
+			Id:                    null.NewString(uuid.NewString(), true),
+			UserId:                foundUser.Id,
+			AccessToken:           accessToken,
+			RefreshToken:          refreshToken,
+			AccessTokenExpiredAt:  accessTokenExpiredAt,
+			RefreshTokenExpiredAt: refreshTokenExpiredAt,
+			CreatedAt:             currentTime,
+			UpdatedAt:             currentTime,
+			DeletedAt:             null.NewTime(time.Time{}, false),
+		}
+
+		createdSession, err := authUseCase.SessionRepository.CreateOne(begin, newSession)
+		if err != nil {
+			return err
+		}
+
+		err = begin.Commit()
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusCreated,
 			Message: "AuthUseCase Login is succeed.",
-			Data:    updatedSession,
+			Data:    createdSession,
 		}
-	}
+		return err
+	})
 
-	newSession := &entity.Session{
-		Id:                    null.NewString(uuid.NewString(), true),
-		UserId:                selectedUser.Id,
-		AccessToken:           accessToken,
-		RefreshToken:          refreshToken,
-		AccessTokenExpiredAt:  accessTokenExpiredAt,
-		RefreshTokenExpiredAt: refreshTokenExpiredAt,
-		CreatedAt:             currentTime,
-		UpdatedAt:             currentTime,
-		DeletedAt:             null.NewTime(time.Time{}, false),
-	}
-
-	createdSession := authUseCase.SessionRepository.CreateOne(begin, newSession)
-	if createdSession == nil {
-		rollbackEr := begin.Rollback()
-		if rollbackEr != nil {
-			return &model.Result[*entity.Session]{
-				Code:    http.StatusInternalServerError,
-				Message: "AuthUseCase Login is failed, transaction rollback is failed.",
-				Data:    nil,
-			}
-		}
-		return &model.Result[*entity.Session]{
+	if beginErr != nil {
+		result = &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
-			Message: "AuthUseCase Login is failed, session is not created.",
+			Message: "AuthUseCase Login  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
 
-	return &model.Result[*entity.Session]{
-		Code:    http.StatusCreated,
-		Message: "AuthUseCase Login is succeed.",
-		Data:    createdSession,
+	return result
+}
+func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result[*entity.Session]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			return err
+		}
+		defer begin.Rollback()
+
+		foundSession, err := authUseCase.SessionRepository.FindOneByAccToken(begin, accessToken)
+		if err != nil {
+			return err
+		}
+
+		if foundSession != nil {
+			patchedSession, err := authUseCase.SessionRepository.DeleteOneById(begin, foundSession.Id.String)
+			if err != nil {
+				return err
+			}
+
+			err = begin.Commit()
+			result = &model.Result[*entity.Session]{
+				Code:    http.StatusOK,
+				Message: "Logout is successful.",
+				Data:    patchedSession,
+			}
+			return err
+		}
+
+		return errors.New("session not found")
+	})
+
+	if beginErr != nil {
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "Logout failed: " + beginErr.Error(),
+			Data:    nil,
+		}
 	}
+
+	return result
+}
+
+func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *model.Result[*entity.Session]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			return err
+		}
+		defer begin.Rollback()
+
+		foundSession, err := authUseCase.SessionRepository.FindOneByRefToken(begin, refreshToken)
+		if err != nil {
+			return err
+		}
+
+		if foundSession.RefreshTokenExpiredAt.Valid && foundSession.RefreshTokenExpiredAt.Time.Before(time.Now()) {
+			return errors.New("refresh token has expired")
+		}
+
+		newAccessToken := uuid.New().String()
+
+		foundSession.AccessToken = null.NewString(newAccessToken, true)
+		foundSession.UpdatedAt = null.NewTime(time.Now(), true)
+		patchedSession, err := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
+		if err != nil {
+			return err
+		}
+
+		err = begin.Commit()
+		if err != nil {
+			return err
+		}
+
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusOK,
+			Message: "GetNewAccessToken is successful.",
+			Data:    patchedSession,
+		}
+		return nil
+	})
+
+	if beginErr != nil {
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "GetNewAccessToken failed: " + beginErr.Error(),
+			Data:    nil,
+		}
+	}
+
+	return result
 }

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-
 	"social-media/internal/entity"
 )
 
@@ -14,47 +13,36 @@ func NewSearchRepository() *SearchRepository {
 	return searchRepository
 }
 
-func DeserializePostRows(rows *sql.Rows) []*entity.Post {
-	var foundPosts []*entity.Post
-	for rows.Next() {
-		foundPost := &entity.Post{}
-		scanErr := rows.Scan(
-			&foundPost.Id,
-			&foundPost.UserId,
-			&foundPost.Description,
-			&foundPost.ImageUrl,
-			&foundPost.UpdatedAt,
-			&foundPost.CreatedAt,
-			&foundPost.DeletedAt,
-		)
-		if scanErr != nil {
-			panic(scanErr)
-		}
-		foundPosts = append(foundPosts, foundPost)
-	}
-	return foundPosts
-}
-
-func (searchRepository *SearchRepository) FindAllUser(begin *sql.Tx) []*entity.User {
+func (searchRepository *SearchRepository) FindAllUser(begin *sql.Tx) (result []*entity.User, err error) {
 	rows, queryErr := begin.Query(
 		"SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM user", nil,
 	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
 
 	foundAllUser := DeserializeUserRows(rows)
-	return foundAllUser
 
+	result = foundAllUser
+	err = nil
+	return result, err
 }
 
-func (searchRepository *SearchRepository) FindAllPostByUserId(begin *sql.Tx, id string) []*entity.Post {
+func (searchRepository *SearchRepository) FindAllPostByUserId(begin *sql.Tx, id string) (result []*entity.Post, err error) {
 	rows, queryErr := begin.Query(
 		"SELECT id, user_id, description, image_url, created_at, updated_at, deleted_at FROM \"post\" where user_id = ? LIMIT 1", id,
 	)
 	if queryErr != nil {
-		panic(queryErr)
+		result = nil
+		err = queryErr
+		return
 	}
+
 	foundAllPosts := DeserializePostRows(rows)
-	return foundAllPosts
+
+	result = foundAllPosts
+	err = nil
+	return result, err
 }
