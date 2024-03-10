@@ -94,13 +94,9 @@ func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
 
 	req.ID = postId
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
 	if err := p.PostUseCase.Delete(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	response.NewResponse(w, http.StatusText(http.StatusOK), new([]string), http.StatusOK)

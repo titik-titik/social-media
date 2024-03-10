@@ -46,7 +46,7 @@ func (p *PostRepository) Get(db *sql.Tx, posts *[]entity.Post, order string, lim
 }
 
 func (p PostRepository) Update(db *sql.Tx, posts *entity.Post, postID string) error {
-	_, err := db.Query("UPDATE post set image_url=$1, description=$2 WHERE id = $3", posts.ImageUrl, posts.Description, postID)
+	_, err := db.Query("UPDATE post set image_url=$1, description=$2,updated_at=$3 WHERE id = $4", posts.ImageUrl, posts.Description, posts.UpdatedAt, postID)
 
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (p PostRepository) Update(db *sql.Tx, posts *entity.Post, postID string) er
 }
 
 func (p PostRepository) Delete(db *sql.Tx, postID string) error {
-	_, err := db.Query("DELETE FROM post WHERE $1", postID)
+	_, err := db.Query("DELETE FROM post WHERE id = $1", postID)
 
 	if err != nil {
 		return err
