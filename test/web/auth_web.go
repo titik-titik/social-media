@@ -32,6 +32,7 @@ func NewAuthWeb(test *testing.T) *AuthWeb {
 func (authWeb *AuthWeb) Start() {
 	authWeb.Test.Run("AuthWeb_Register_Succeed", authWeb.Register)
 	authWeb.Test.Run("AuthWeb_Login_Succeed", authWeb.Login)
+	authWeb.Test.Run("AuthWeb_Logout_Succeed", authWeb.Logout)
 }
 
 func (authWeb *AuthWeb) Register(t *testing.T) {
@@ -119,4 +120,29 @@ func (authWeb *AuthWeb) Login(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 	assert.Equal(t, selectedUserMock.Id, bodyResponse.Data.UserId)
+}
+
+func (authWeb *AuthWeb) Logout(t *testing.T) {
+	t.Parallel()
+
+	testWeb := GetTestWeb()
+	testWeb.AllSeeder.Up()
+
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	logoutURL := fmt.Sprintf("%s/%s/logout", testWeb.Server.URL, authWeb.Path)
+	logoutRequest, newLogoutRequestErr := http.NewRequest(http.MethodPost, logoutURL, nil)
+	if newLogoutRequestErr != nil {
+		t.Fatal(newLogoutRequestErr)
+	}
+
+	accessToken := selectedSessionMock.AccessToken
+	logoutRequest.Header.Set("Authorization", "Bearer "+accessToken.String)
+
+	logoutResponse, logoutDoErr := http.DefaultClient.Do(logoutRequest)
+	if logoutDoErr != nil {
+		t.Fatal(logoutDoErr)
+	}
+	defer logoutResponse.Body.Close()
+
+	assert.Equal(t, http.StatusOK, logoutResponse.StatusCode)
 }

@@ -204,7 +204,7 @@ func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result
 		}
 		defer begin.Rollback()
 
-		foundSession, err := authUseCase.SessionRepository.FindOneByToken(begin, accessToken)
+		foundSession, err := authUseCase.SessionRepository.FindOneByAccToken(begin, accessToken)
 		if err != nil {
 			return err
 		}
@@ -231,6 +231,56 @@ func (authUseCase *AuthUseCase) Logout(accessToken string) (result *model.Result
 		result = &model.Result[*entity.Session]{
 			Code:    http.StatusInternalServerError,
 			Message: "Logout failed: " + beginErr.Error(),
+			Data:    nil,
+		}
+	}
+
+	return result
+}
+
+func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *model.Result[*entity.Session]) {
+	beginErr := crdb.Execute(func() (err error) {
+		begin, err := authUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
+		if err != nil {
+			return err
+		}
+		defer begin.Rollback()
+
+		foundSession, err := authUseCase.SessionRepository.FindOneByRefToken(begin, refreshToken)
+		if err != nil {
+			return err
+		}
+
+		if foundSession.RefreshTokenExpiredAt.Valid && foundSession.RefreshTokenExpiredAt.Time.Before(time.Now()) {
+			return errors.New("refresh token has expired")
+		}
+
+		newAccessToken := uuid.New().String()
+
+		foundSession.AccessToken = null.NewString(newAccessToken, true)
+		foundSession.UpdatedAt = null.NewTime(time.Now(), true)
+		patchedSession, err := authUseCase.SessionRepository.PatchOneById(begin, foundSession.Id.String, foundSession)
+		if err != nil {
+			return err
+		}
+
+		err = begin.Commit()
+		if err != nil {
+			return err
+		}
+
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusOK,
+			Message: "GetNewAccessToken is successful.",
+			Data:    patchedSession,
+		}
+		return nil
+	})
+
+	if beginErr != nil {
+		result = &model.Result[*entity.Session]{
+			Code:    http.StatusInternalServerError,
+			Message: "GetNewAccessToken failed: " + beginErr.Error(),
 			Data:    nil,
 		}
 	}

@@ -37,7 +37,7 @@ func (authMiddleware *AuthMiddleware) Middleware(next http.Handler) http.Handler
 		}
 		defer tx.Rollback()
 
-		session, err := authMiddleware.SessionRepository.FindOneByToken(tx, token)
+		session, err := authMiddleware.SessionRepository.FindOneByAccToken(tx, token)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
