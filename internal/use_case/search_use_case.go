@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"social-media/internal/config"
 	"social-media/internal/entity"
-	"social-media/internal/model"
+	"social-media/internal/model/response"
 	"social-media/internal/repository"
 )
 
@@ -25,7 +25,7 @@ func NewSearchUseCase(
 	return searchUseCase
 }
 
-func (searchUseCase *SearchUseCase) FindAllUser() (result *model.Result[[]*entity.User]) {
+func (searchUseCase *SearchUseCase) FindAllUser() (result *response.Response[[]*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -38,7 +38,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *model.Result[[]*entit
 			return err
 		}
 		if foundAllUser == nil {
-			result = &model.Result[[]*entity.User]{
+			result = &response.Response[[]*entity.User]{
 				Code:    http.StatusNotFound,
 				Message: "SearchUserCase FindAllUser is failed, user is not found.",
 				Data:    nil,
@@ -47,7 +47,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *model.Result[[]*entit
 		}
 
 		err = begin.Commit()
-		result = &model.Result[[]*entity.User]{
+		result = &response.Response[[]*entity.User]{
 			Code:    http.StatusOK,
 			Message: "SearchUserCase FindAllUser is succeed.",
 			Data:    foundAllUser,
@@ -56,7 +56,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *model.Result[[]*entit
 	})
 
 	if beginErr != nil {
-		result = &model.Result[[]*entity.User]{
+		result = &response.Response[[]*entity.User]{
 			Code:    http.StatusInternalServerError,
 			Message: "SearchUserCase FindAllUser  is failed, " + beginErr.Error(),
 			Data:    nil,
@@ -66,7 +66,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *model.Result[[]*entit
 	return result
 }
 
-func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *model.Result[[]*entity.Post]) {
+func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *response.Response[[]*entity.Post]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -79,7 +79,7 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *mode
 			return err
 		}
 		if foundAllPost == nil {
-			result = &model.Result[[]*entity.Post]{
+			result = &response.Response[[]*entity.Post]{
 				Code:    http.StatusNotFound,
 				Message: "SearchPostCase FindAllPostByUserId is failed, post is not found by user id.",
 				Data:    nil,
@@ -88,7 +88,7 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *mode
 		}
 
 		err = begin.Commit()
-		result = &model.Result[[]*entity.Post]{
+		result = &response.Response[[]*entity.Post]{
 			Code:    http.StatusOK,
 			Message: "SearchPostCase FindAllPostByUserId is succeed",
 			Data:    foundAllPost,
@@ -97,7 +97,7 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *mode
 	})
 
 	if beginErr != nil {
-		result = &model.Result[[]*entity.Post]{
+		result = &response.Response[[]*entity.Post]{
 			Code:    http.StatusInternalServerError,
 			Message: "SearchPostCase FindAllPostByUserId  is failed, " + beginErr.Error(),
 			Data:    nil,

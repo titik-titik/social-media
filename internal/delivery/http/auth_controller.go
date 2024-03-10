@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	model_request "social-media/internal/model/request/controller"
-	model_response "social-media/internal/model/response"
+	"social-media/internal/model/response"
 	"social-media/internal/use_case"
 	"strings"
 )
@@ -29,7 +29,7 @@ func (authController *AuthController) Register(writer http.ResponseWriter, reade
 	}
 
 	result := authController.AuthUseCase.Register(request)
-	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+	response.NewResponse(writer, result)
 }
 
 func (authController *AuthController) Login(writer http.ResponseWriter, reader *http.Request) {
@@ -41,7 +41,7 @@ func (authController *AuthController) Login(writer http.ResponseWriter, reader *
 	}
 
 	result := authController.AuthUseCase.Login(request)
-	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+	response.NewResponse(writer, result)
 }
 
 func (authController *AuthController) Logout(writer http.ResponseWriter, reader *http.Request) {
@@ -50,7 +50,7 @@ func (authController *AuthController) Logout(writer http.ResponseWriter, reader 
 	fmt.Println(tokenString)
 
 	result := authController.AuthUseCase.Logout(tokenString)
-	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+	response.NewResponse(writer, result)
 }
 
 func (authController *AuthController) GetNewAccessToken(writer http.ResponseWriter, reader *http.Request) {
@@ -58,5 +58,5 @@ func (authController *AuthController) GetNewAccessToken(writer http.ResponseWrit
 	tokenString := strings.Replace(token, "Bearer ", "", 1)
 
 	result := authController.AuthUseCase.GetNewAccessToken(tokenString)
-	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+	response.NewResponse(writer, result)
 }

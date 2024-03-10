@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"social-media/internal/entity"
 	model_request "social-media/internal/model/request/controller"
-	model_response "social-media/internal/model/response"
+	"social-media/internal/model/response"
 	"social-media/internal/use_case"
 
 	"github.com/gorilla/mux"
@@ -28,7 +28,7 @@ func (userController *UserController) FindOneById(writer http.ResponseWriter, re
 
 	result := userController.UserUseCase.FindOneById(id)
 
-	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+	response.NewResponse(writer, result)
 }
 
 func (userController *UserController) FindOneByOneParam(writer http.ResponseWriter, reader *http.Request) {
@@ -37,17 +37,18 @@ func (userController *UserController) FindOneByOneParam(writer http.ResponseWrit
 
 	if email != "" {
 		result := userController.UserUseCase.FindOneByEmail(email)
-		model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+		response.NewResponse(writer, result)
 	} else if username != "" {
 		result := userController.UserUseCase.FindOneByUsername(username)
-		model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+		response.NewResponse(writer, result)
 	} else {
-		response := &model_response.Response[*entity.User]{
+		result := &response.Response[*entity.User]{
 			Message: "User parameter is invalid.",
 			Data:    nil,
+			Code:    http.StatusNotFound,
 		}
 
-		model_response.NewResponse(writer, http.StatusText(http.StatusNotFound), response, http.StatusOK)
+		response.NewResponse(writer, result)
 	}
 }
 
@@ -63,7 +64,7 @@ func (userController *UserController) PatchOneById(writer http.ResponseWriter, r
 
 	result := userController.UserUseCase.PatchOneByIdFromRequest(id, request)
 
-	model_response.NewResponse(writer, result.Message, result.Data, http.StatusOK)
+	response.NewResponse(writer, result)
 }
 
 func (userController *UserController) DeleteOneById(writer http.ResponseWriter, reader *http.Request) {
@@ -72,5 +73,5 @@ func (userController *UserController) DeleteOneById(writer http.ResponseWriter, 
 
 	result := userController.UserUseCase.DeleteOneById(id)
 
-	model_response.NewResponse(writer, result.Message, result.Data, result.Code)
+	response.NewResponse(writer, result)
 }

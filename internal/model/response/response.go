@@ -6,20 +6,16 @@ import (
 )
 
 type Response[T any] struct {
-	Message string `json:"message"`
-	Data    T      `json:"data,omitempty"`
-	Code    int    `json:"code"`
+	Message string      `json:"message,omitempty"`
+	Data    T           `json:"data,omitempty"`
+	Code    int         `json:"code,omitempty"`
+	Errors  interface{} `json:"errors,omitempty"`
 }
 
-func NewResponse[T any](w http.ResponseWriter, message string, data T, statusCode int) {
+func NewResponse[T any](w http.ResponseWriter, response *Response[T]) {
 	w.Header().Set("Content-Type", "application/json")
-	response := &Response[T]{
-		Message: message,
-		Data:    data,
-		Code:    statusCode,
-	}
 
-	w.WriteHeader(statusCode)
+	w.WriteHeader(response.Code)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
