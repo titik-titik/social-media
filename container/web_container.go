@@ -30,6 +30,7 @@ func NewWebContainer() *WebContainer {
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
 	logger := NewLogger(envConfig)
+	validate := NewValidator()
 
 	searchRepository := repository.NewSearchRepository()
 	userRepository := repository.NewUserRepository()
@@ -40,7 +41,7 @@ func NewWebContainer() *WebContainer {
 	searchUseCase := use_case.NewSearchUseCase(databaseConfig, searchRepository)
 	userUseCase := use_case.NewUserUseCase(databaseConfig, userRepository)
 	authUseCase := use_case.NewAuthUseCase(databaseConfig, userRepository, sessionRepository)
-	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository, logger)
+	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository, logger, validate)
 	useCaseContainer := NewUseCaseContainer(userUseCase, authUseCase, searchUseCase)
 
 	userController := http_delivery.NewUserController(userUseCase)

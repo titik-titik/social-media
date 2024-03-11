@@ -3,9 +3,11 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/guregu/null"
 	"github.com/rs/zerolog"
 	"social-media/internal/entity"
+	"strings"
 )
 
 type PostRepository struct {
@@ -37,7 +39,6 @@ func (p *PostRepository) FindByID(db *sql.Tx, post *entity.Post, postId null.Str
 }
 
 func DeserializePostRows(rows *sql.Rows, foundPosts *[]entity.Post) error {
-	//var foundPosts []entity.Post
 	for rows.Next() {
 		foundPost := new(entity.Post)
 		scanErr := rows.Scan(
@@ -58,7 +59,9 @@ func DeserializePostRows(rows *sql.Rows, foundPosts *[]entity.Post) error {
 }
 
 func (p *PostRepository) Get(db *sql.Tx, posts *[]entity.Post, order string, limit int8, offset int64) error {
-	rows, err := db.Query("SELECT id,user_id,image_url,description,created_at,updated_at,deleted_at FROM post ORDER BY updated_at DESC LIMIT $1 OFFSET $2", limit, offset)
+	query := fmt.Sprintf(`SELECT id,user_id,image_url,description,created_at,updated_at,deleted_at FROM post ORDER BY updated_at %s LIMIT %d OFFSET %d`, strings.ToUpper(order), limit, offset)
+
+	rows, err := db.Query(query)
 
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 package use_case
 
 import (
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 	"net/http"
 	"social-media/internal/config"
@@ -19,13 +20,15 @@ type PostUseCase struct {
 	PostRepository *repository.PostRepository
 	DB             *config.DatabaseConfig
 	Log            *zerolog.Logger
+	Validate       *validator.Validate
 }
 
-func NewPostUseCase(db *config.DatabaseConfig, postRepository *repository.PostRepository, log *zerolog.Logger) *PostUseCase {
+func NewPostUseCase(db *config.DatabaseConfig, postRepository *repository.PostRepository, log *zerolog.Logger, validate *validator.Validate) *PostUseCase {
 	return &PostUseCase{
 		PostRepository: postRepository,
 		DB:             db,
 		Log:            log,
+		Validate:       validate,
 	}
 }
 
@@ -49,7 +52,8 @@ func (p *PostUseCase) Create(request *model_controller.CreatePostRequest) *respo
 	}
 
 	if err = p.PostRepository.Create(tx, post); err != nil {
-		p.Log.Error().Msgf("failed to create new post : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to create new post : %+v, unable to back : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
@@ -79,7 +83,8 @@ func (p *PostUseCase) Find(request *model_controller.GetPostRequest) *response.R
 	post := &entity.Post{}
 
 	if err = p.PostRepository.FindByID(tx, post, request.PostId); err != nil {
-		p.Log.Error().Msgf("failed to find by id post : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to find by id post : %+v, unable to back : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
@@ -107,10 +112,20 @@ func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) *response.
 		}
 	}
 
+	if err := p.Validate.Struct(request); err != nil {
+		p.Log.Error().Err(err).Msgf("failed to validate request body")
+		return &response.Response[[]*response.PostResponse]{
+			Code:    http.StatusBadRequest,
+			Message: http.StatusText(http.StatusBadRequest),
+			Errors:  err.Error(),
+		}
+	}
+
 	posts := new([]entity.Post)
 
 	if err = p.PostRepository.Get(tx, posts, request.Order, request.Limit, request.Offset); err != nil {
-		p.Log.Error().Msgf("failed to get all post : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to get all post : %+v, unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[[]*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
@@ -144,7 +159,8 @@ func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) *respon
 	total, err := p.PostRepository.CountByID(tx, request.ID)
 
 	if err != nil {
-		p.Log.Error().Msgf("failed to count by id post : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to count by id post : %+v, unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
@@ -165,7 +181,8 @@ func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) *respon
 	}
 
 	if err = p.PostRepository.Update(tx, post, request.ID); err != nil {
-		p.Log.Error().Msgf("failed to update post : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to update post : %+v, unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
@@ -198,7 +215,8 @@ func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) *respon
 	total, err := p.PostRepository.CountByID(tx, request.ID)
 
 	if err != nil {
-		p.Log.Error().Msgf("failed to count by id post : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to count by id post : %+v, unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
@@ -213,7 +231,8 @@ func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) *respon
 	}
 
 	if err = p.PostRepository.Delete(tx, request.ID); err != nil {
-		p.Log.Error().Msgf("failed to delete post by id : %+v", err)
+		rollbackErr := tx.Rollback()
+		p.Log.Error().Msgf("failed to delete post by id : %+v,unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusInternalServerError,
 			Message: http.StatusText(http.StatusInternalServerError),
