@@ -10,8 +10,6 @@ import (
 	model_response "social-media/internal/model/response"
 	"testing"
 
-	"github.com/cockroachdb/cockroach-go/v2/crdb"
-
 	"github.com/guregu/null"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"

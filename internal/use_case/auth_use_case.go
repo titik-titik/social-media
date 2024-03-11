@@ -278,7 +278,7 @@ func (authUseCase *AuthUseCase) GetNewAccessToken(refreshToken string) (result *
 			Message: "AuthUseCase GetNewAccessToken is succeed.",
 			Data:    patchedSession,
 		}
-		return nil
+		return err
 	})
 
 	if beginErr != nil {
