@@ -2,8 +2,10 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/cockroachdb/cockroach-go/v2/crdb"
+	"fmt"
 	"social-media/internal/entity"
+
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 )
 
 type UserRepository struct {
@@ -236,4 +238,35 @@ func (userRepository *UserRepository) DeleteOneById(begin *sql.Tx, id string) (r
 	result = foundUsers[0]
 	err = nil
 	return result, err
+}
+func (r *UserRepository) GetAllUsers(begin *sql.Tx, order string, limit string, offset string) ([]entity.User, error) {
+	var users []entity.User
+	var rows *sql.Rows
+	var err error
+
+	query := "SELECT id, username, email, avatar, bio, verified, created_at, updated_at, deleted_at FROM users"
+
+	query += fmt.Sprintf(" ORDER BY created_at %s", order)
+
+	query += fmt.Sprintf(" LIMIT %s OFFSET %s", limit, offset)
+
+	rows, err = begin.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user entity.User
+		if err := rows.Scan(&user.Id, &user.Username, &user.Email, &user.AvatarUrl, &user.Bio, &user.IsVerified, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
