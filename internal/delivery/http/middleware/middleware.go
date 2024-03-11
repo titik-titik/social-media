@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"social-media/internal/config"
+	"social-media/internal/model/response"
 	"social-media/internal/repository"
 	"strings"
 	"time"
@@ -11,13 +12,14 @@ import (
 )
 
 type AuthMiddleware struct {
-	DatabaseConfig    *config.DatabaseConfig
 	SessionRepository *repository.SessionRepository
+	DatabaseConfig    *config.DatabaseConfig
 }
 
-func NewAuthMiddleware(sessionRepository *repository.SessionRepository) *AuthMiddleware {
+func NewAuthMiddleware(sessionRepository repository.SessionRepository, databaseConfig *config.DatabaseConfig) *AuthMiddleware {
 	return &AuthMiddleware{
-		SessionRepository: sessionRepository,
+		SessionRepository: &sessionRepository,
+		DatabaseConfig:    databaseConfig,
 	}
 }
 
@@ -26,28 +28,47 @@ func (authMiddleware *AuthMiddleware) Middleware(next http.Handler) http.Handler
 		token := r.Header.Get("Authorization")
 		token = strings.Replace(token, "Bearer ", "", 1)
 		if token == "" {
-			http.Error(w, "401 - Unauthorized: Missing token", http.StatusUnauthorized)
+			result := &response.Response[interface{}]{
+				Code:    http.StatusUnauthorized,
+				Message: "Unauthorized: Missing token",
+			}
+			response.NewResponse(w, result)
 			return
 		}
 
 		tx, err := authMiddleware.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			result := &response.Response[interface{}]{
+				Code:    http.StatusInternalServerError,
+				Message: "transaction error",
+			}
+			response.NewResponse(w, result)
 			return
 		}
-		defer tx.Rollback()
 
 		session, err := authMiddleware.SessionRepository.FindOneByAccToken(tx, token)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			result := &response.Response[interface{}]{
+				Code:    http.StatusUnauthorized,
+				Message: "Unauthorized: token not found",
+			}
+			response.NewResponse(w, result)
 			return
 		}
 		if session == nil {
-			http.Error(w, "401 - Unauthorized: Invalid Token", http.StatusUnauthorized)
+			result := &response.Response[interface{}]{
+				Code:    http.StatusUnauthorized,
+				Message: "Unauthorized: Invalid Token",
+			}
+			response.NewResponse(w, result)
 			return
 		}
 		if session.AccessTokenExpiredAt == null.NewTime(time.Now(), true) {
-			http.Error(w, "401 - Unauthorized: Token expired", http.StatusUnauthorized)
+			result := &response.Response[interface{}]{
+				Code:    http.StatusUnauthorized,
+				Message: "Unauthorized: Token expired",
+			}
+			response.NewResponse(w, result)
 			return
 		}
 		next.ServeHTTP(w, r)
