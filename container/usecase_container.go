@@ -3,20 +3,20 @@ package container
 import "social-media/internal/use_case"
 
 type UseCaseContainer struct {
-	User   *use_case.UserUseCase
-	Auth   *use_case.AuthUseCase
-	Search *use_case.SearchUseCase
+	User *use_case.UserUseCase
+	Auth *use_case.AuthUseCase
+	Post *use_case.PostUseCase
 }
 
 func NewUseCaseContainer(
 	user *use_case.UserUseCase,
 	auth *use_case.AuthUseCase,
-	search *use_case.SearchUseCase,
+	post *use_case.PostUseCase,
 ) *UseCaseContainer {
 	useCaseContainer := &UseCaseContainer{
-		User:   user,
-		Auth:   auth,
-		Search: search,
+		User: user,
+		Auth: auth,
+		Post: post,
 	}
 	return useCaseContainer
 }

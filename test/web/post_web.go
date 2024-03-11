@@ -184,7 +184,6 @@ func (p PostWeb) Delete(t *testing.T) {
 
 	testWeb := GetTestWeb()
 	testWeb.AllSeeder.Up()
-	testWeb.AllSeeder.Post.Down()
 	defer testWeb.AllSeeder.Down()
 
 	postMock := testWeb.AllSeeder.Post.PostMock.Data[1]
