@@ -75,9 +75,9 @@ func (p PostWeb) GetAll(t *testing.T) {
 	url := fmt.Sprintf("%s/%s/", testWeb.Server.URL, p.Path)
 
 	jsonBody := []byte(`{
-    "limit": 10,
+    "limit": 2,
     "offset": 0,
-    "order":"DESC"
+    "order":"desc"
 }`)
 	bodyReader := bytes.NewReader(jsonBody)
 	request, err := http.NewRequest(http.MethodGet, url, bodyReader)
@@ -99,7 +99,7 @@ func (p PostWeb) GetAll(t *testing.T) {
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 	assert.Equal(t, bodyResponse.Code, http.StatusOK)
 	assert.Equal(t, bodyResponse.Message, http.StatusText(http.StatusOK))
-	assert.Len(t, bodyResponse.Data, 10)
+	assert.Len(t, bodyResponse.Data, 2)
 }
 
 func (p PostWeb) Update(t *testing.T) {
@@ -179,7 +179,7 @@ func (p PostWeb) Delete(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	postMock := testWeb.AllSeeder.Post.PostMock.Data[0]
+	postMock := testWeb.AllSeeder.Post.PostMock.Data[1]
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, p.Path, postMock.Id.String)
 
 	request, err := http.NewRequest(http.MethodDelete, url, http.NoBody)
