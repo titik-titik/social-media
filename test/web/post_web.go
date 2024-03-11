@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/guregu/null"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"testing"
+
+	"github.com/guregu/null"
+	"github.com/stretchr/testify/assert"
 )
 
 type PostWeb struct {
@@ -46,6 +47,8 @@ func (p PostWeb) FindByID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, err := http.DefaultClient.Do(request)
 
 	if err != nil {
@@ -75,7 +78,7 @@ func (p PostWeb) GetAll(t *testing.T) {
 	url := fmt.Sprintf("%s/%s/", testWeb.Server.URL, p.Path)
 
 	jsonBody := []byte(`{
-    "limit": 10,
+    "limit": 2,
     "offset": 0,
     "order":"DESC"
 }`)
@@ -84,6 +87,8 @@ func (p PostWeb) GetAll(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, err := http.DefaultClient.Do(request)
 
 	if err != nil {
@@ -99,7 +104,7 @@ func (p PostWeb) GetAll(t *testing.T) {
 	assert.Equal(t, "application/json", response.Header.Get("Content-Type"))
 	assert.Equal(t, bodyResponse.Code, http.StatusOK)
 	assert.Equal(t, bodyResponse.Message, http.StatusText(http.StatusOK))
-	assert.Len(t, bodyResponse.Data, 10)
+	assert.Len(t, bodyResponse.Data, 2)
 }
 
 func (p PostWeb) Update(t *testing.T) {
@@ -128,6 +133,8 @@ func (p PostWeb) Update(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, err := http.DefaultClient.Do(request)
 
 	if err != nil {
@@ -149,7 +156,7 @@ func (p PostWeb) Update(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, err = http.DefaultClient.Do(request)
 
 	if err != nil {
@@ -186,6 +193,8 @@ func (p PostWeb) Delete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

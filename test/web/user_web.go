@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"net/http"
 	"social-media/internal/entity"
 	model_request "social-media/internal/model/request/controller"
 	model_response "social-media/internal/model/response"
 	"testing"
+
+	"github.com/cockroachdb/cockroach-go/v2/crdb"
 
 	"github.com/guregu/null"
 	"github.com/stretchr/testify/assert"
@@ -51,6 +52,8 @@ func (userWeb *UserWeb) FindOneById(t *testing.T) {
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, doErr := http.DefaultClient.Do(request)
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
@@ -90,6 +93,8 @@ func (userWeb *UserWeb) FindOneByEmail(t *testing.T) {
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Fatal(doErr)
@@ -126,6 +131,8 @@ func (userWeb *UserWeb) FindOneByUsername(t *testing.T) {
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Fatal(doErr)
@@ -176,6 +183,8 @@ func (userWeb *UserWeb) PatchOneById(t *testing.T) {
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Fatal(doErr)
@@ -266,6 +275,8 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	if newRequestErr != nil {
 		t.Fatal(newRequestErr)
 	}
+	selectedSessionMock := testWeb.AllSeeder.Session.SessionMock.Data[0]
+	request.Header.Set("Authorization", "Bearer "+selectedSessionMock.AccessToken.String)
 	response, doErr := http.DefaultClient.Do(request)
 	if doErr != nil {
 		t.Fatal(doErr)
