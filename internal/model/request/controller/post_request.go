@@ -13,8 +13,8 @@ type GetPostRequest struct {
 
 type GetAllPostRequest struct {
 	Limit  int8   `json:"limit" validate:"required"`
-	Offset int64  `json:"offset" validate:"required"`
-	Order  string `json:"order" validate:"required"`
+	Offset int64  `json:"offset" validate:"gte=0"`
+	Order  string `json:"order" validate:"oneof=desc asc"`
 }
 
 type UpdatePostRequest struct {
