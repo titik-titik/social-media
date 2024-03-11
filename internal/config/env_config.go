@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 type AppEnv struct {
 	Host string
@@ -21,10 +23,15 @@ type RedisOneEnv struct {
 	Password string
 }
 
+type LoggerEnv struct {
+	Level int8
+}
+
 type EnvConfig struct {
 	App         *AppEnv
 	Cockroachdb *CockroachdbEnv
 	RedisOne    *RedisOneEnv
+	Logger      *LoggerEnv
 }
 
 func NewEnvConfig() *EnvConfig {
@@ -44,6 +51,9 @@ func NewEnvConfig() *EnvConfig {
 			Host:     os.Getenv("GATEWAY_HOST"),
 			Port:     os.Getenv("GATEWAY_REDIS_PORT"),
 			Password: os.Getenv("GATEWAY_REDIS_PASSWORD"),
+		},
+		Logger: &LoggerEnv{
+			Level: 6,
 		},
 	}
 	return envConfig

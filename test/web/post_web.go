@@ -27,10 +27,10 @@ func NewPostWeb(test *testing.T) *PostWeb {
 }
 
 func (p *PostWeb) Start() {
-	p.Test.Run("FindByID", p.FindByID)
-	p.Test.Run("GetAll", p.GetAll)
-	p.Test.Run("UpdatePost", p.Update)
-	p.Test.Run("DeletePost", p.Delete)
+	p.Test.Run("PostWeb_FindByID_Succeed", p.FindByID)
+	p.Test.Run("PostWeb_GetAll_Succeed", p.GetAll)
+	p.Test.Run("PostWeb_Update_Succeed", p.Update)
+	p.Test.Run("PostWeb_Delete_Succeed", p.Delete)
 }
 
 func (p PostWeb) FindByID(t *testing.T) {
@@ -80,7 +80,7 @@ func (p PostWeb) GetAll(t *testing.T) {
 	jsonBody := []byte(`{
     "limit": 2,
     "offset": 0,
-    "order":"DESC"
+    "order":"desc"
 }`)
 	bodyReader := bytes.NewReader(jsonBody)
 	request, err := http.NewRequest(http.MethodGet, url, bodyReader)
@@ -186,7 +186,7 @@ func (p PostWeb) Delete(t *testing.T) {
 	testWeb.AllSeeder.Up()
 	defer testWeb.AllSeeder.Down()
 
-	postMock := testWeb.AllSeeder.Post.PostMock.Data[0]
+	postMock := testWeb.AllSeeder.Post.PostMock.Data[1]
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, p.Path, postMock.Id.String)
 
 	request, err := http.NewRequest(http.MethodDelete, url, http.NoBody)
