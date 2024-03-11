@@ -6,6 +6,8 @@ services:
     hostname: ${APP_HOST}
     deploy:
       replicas: 1
+    healthcheck:
+      test: netstat -tln | grep ${GATEWAY_APP_PORT} || exit 1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |

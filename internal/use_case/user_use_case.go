@@ -396,6 +396,7 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) (result *response.Respo
 				Message: "UserUserCase DeleteOneById is failed, user is not deleted by id.",
 				Data:    nil,
 			}
+			return err
 		}
 
 		err = begin.Commit()

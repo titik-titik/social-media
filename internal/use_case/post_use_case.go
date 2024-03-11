@@ -167,7 +167,7 @@ func (p PostUseCase) Update(request *model_controller.UpdatePostRequest) *respon
 		}
 	}
 
-	if total < 0 {
+	if total == 0 {
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusNotFound,
 			Message: http.StatusText(http.StatusNotFound),
@@ -223,7 +223,7 @@ func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) *respon
 		}
 	}
 
-	if total < 0 {
+	if total == 0 {
 		return &response.Response[*response.PostResponse]{
 			Code:    http.StatusNotFound,
 			Message: http.StatusText(http.StatusNotFound),
