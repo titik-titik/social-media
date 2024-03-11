@@ -14,17 +14,23 @@ import (
 )
 
 type UserUseCase struct {
-	DatabaseConfig *config.DatabaseConfig
-	UserRepository *repository.UserRepository
+	DatabaseConfig    *config.DatabaseConfig
+	UserRepository    *repository.UserRepository
+	SessionRepository *repository.SessionRepository
+	PostRepository    *repository.PostRepository
 }
 
 func NewUserUseCase(
 	databaseConfig *config.DatabaseConfig,
 	userRepository *repository.UserRepository,
+	sessionRepository *repository.SessionRepository,
+	postRepository *repository.PostRepository,
 ) *UserUseCase {
 	userUseCase := &UserUseCase{
-		DatabaseConfig: databaseConfig,
-		UserRepository: userRepository,
+		DatabaseConfig:    databaseConfig,
+		UserRepository:    userRepository,
+		SessionRepository: sessionRepository,
+		PostRepository:    postRepository,
 	}
 	return userUseCase
 }
@@ -33,7 +39,6 @@ func (userUseCase *UserUseCase) FindOneById(id string) (result *response.Respons
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
@@ -75,7 +80,6 @@ func (userUseCase *UserUseCase) FindOneByUsername(username string) (result *resp
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 		foundUser, err := userUseCase.UserRepository.FindOneByUsername(begin, username)
@@ -116,7 +120,6 @@ func (userUseCase *UserUseCase) FindOneByEmail(email string) (result *response.R
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 		foundUser, err := userUseCase.UserRepository.FindOneByEmail(begin, email)
@@ -157,7 +160,6 @@ func (userUseCase *UserUseCase) FindOneByEmailAndPassword(email, password string
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
@@ -199,7 +201,6 @@ func (userUseCase *UserUseCase) FindOneByUsernameAndPassword(username, password 
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
@@ -241,7 +242,6 @@ func (userUseCase *UserUseCase) CreateOne(toCreateUser *entity.User) (result *re
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
@@ -274,7 +274,6 @@ func (userUseCase *UserUseCase) PatchOneById(id string, toPatchUser *entity.User
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
@@ -307,7 +306,6 @@ func (userUseCase *UserUseCase) PatchOneByIdFromRequest(id string, request *mode
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
@@ -384,13 +382,12 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) (result *response.Respo
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := userUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
-			result = nil
 			return err
 		}
 
-		deletedUser, err := userUseCase.UserRepository.DeleteOneById(begin, id)
-		if err != nil {
-			return err
+		deletedUser, deletedUserErr := userUseCase.UserRepository.DeleteOneById(begin, id)
+		if deletedUserErr != nil {
+			return deletedUserErr
 		}
 		if deletedUser == nil {
 			err = begin.Rollback()
@@ -399,7 +396,6 @@ func (userUseCase *UserUseCase) DeleteOneById(id string) (result *response.Respo
 				Message: "UserUserCase DeleteOneById is failed, user is not deleted by id.",
 				Data:    nil,
 			}
-			return err
 		}
 
 		err = begin.Commit()

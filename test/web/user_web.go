@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cockroachdb/cockroach-go/v2/crdb"
 	"net/http"
 	"social-media/internal/entity"
 	model_request "social-media/internal/model/request/controller"
@@ -206,60 +205,6 @@ func (userWeb *UserWeb) DeleteOneById(t *testing.T) {
 	defer testWeb.AllSeeder.Down()
 
 	selectedUserMock := testWeb.AllSeeder.User.UserMock.Data[0]
-
-	userSessions := []*entity.Session{}
-	for _, session := range testWeb.AllSeeder.Session.SessionMock.Data {
-		if session.UserId == selectedUserMock.Id {
-			userSessions = append(userSessions, session)
-		}
-	}
-
-	for _, userSession := range userSessions {
-		begin, beginErr := testWeb.Container.Database.CockroachdbDatabase.Connection.Begin()
-		if beginErr != nil {
-			t.Fatal(beginErr)
-		}
-
-		_, deleteSessionErr := begin.Exec("DELETE FROM \"session\" WHERE id = $1 LIMIT 1;", userSession.Id)
-		if deleteSessionErr != nil {
-			t.Fatal(deleteSessionErr)
-		}
-
-		commitErr := crdb.Execute(func() (err error) {
-			err = begin.Commit()
-			return err
-		})
-		if commitErr != nil {
-			t.Fatal(commitErr)
-		}
-	}
-
-	var userPosts []*entity.Post
-	for _, post := range testWeb.AllSeeder.Post.PostMock.Data {
-		if post.UserId == selectedUserMock.Id {
-			userPosts = append(userPosts, post)
-		}
-	}
-
-	for _, userPost := range userPosts {
-		begin, beginErr := testWeb.Container.Database.CockroachdbDatabase.Connection.Begin()
-		if beginErr != nil {
-			t.Fatal(beginErr)
-		}
-
-		_, deletePostErr := begin.Exec("DELETE FROM \"post\" WHERE id = $1 LIMIT 1;", userPost.Id)
-		if deletePostErr != nil {
-			t.Fatal(deletePostErr)
-		}
-
-		commitErr := crdb.Execute(func() (err error) {
-			err = begin.Commit()
-			return err
-		})
-		if commitErr != nil {
-			t.Fatal(commitErr)
-		}
-	}
 
 	url := fmt.Sprintf("%s/%s/%s", testWeb.Server.URL, userWeb.Path, selectedUserMock.Id.String)
 	request, newRequestErr := http.NewRequest(http.MethodDelete, url, http.NoBody)

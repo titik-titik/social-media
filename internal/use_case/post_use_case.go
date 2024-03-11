@@ -121,9 +121,9 @@ func (p PostUseCase) Get(request *model_controller.GetAllPostRequest) *response.
 		}
 	}
 
-	posts := new([]entity.Post)
+	var posts []*entity.Post
 
-	if err = p.PostRepository.Get(tx, posts, request.Order, request.Limit, request.Offset); err != nil {
+	if err = p.PostRepository.Get(tx, &posts, request.Order, request.Limit, request.Offset); err != nil {
 		rollbackErr := tx.Rollback()
 		p.Log.Error().Msgf("failed to get all post : %+v, unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[[]*response.PostResponse]{
@@ -230,7 +230,7 @@ func (p PostUseCase) Delete(request *model_controller.DeletePostRequest) *respon
 		}
 	}
 
-	if err = p.PostRepository.Delete(tx, request.ID); err != nil {
+	if _, err = p.PostRepository.Delete(tx, request.ID); err != nil {
 		rollbackErr := tx.Rollback()
 		p.Log.Error().Msgf("failed to delete post by id : %+v,unable to rollback : %+v", err, rollbackErr)
 		return &response.Response[*response.PostResponse]{

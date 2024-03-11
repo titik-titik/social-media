@@ -25,7 +25,7 @@ func NewSearchUseCase(
 	return searchUseCase
 }
 
-func (searchUseCase *SearchUseCase) FindAllUser() (result *response.Response[[]*entity.User]) {
+func (searchUseCase *SearchUseCase) FindManyUser() (result *response.Response[[]*entity.User]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -33,14 +33,14 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *response.Response[[]*
 			return err
 		}
 
-		foundAllUser, err := searchUseCase.SearchRepository.FindAllUser(begin)
+		foundAllUser, err := searchUseCase.SearchRepository.FindManyUser(begin)
 		if err != nil {
 			return err
 		}
 		if foundAllUser == nil {
 			result = &response.Response[[]*entity.User]{
 				Code:    http.StatusNotFound,
-				Message: "SearchUserCase FindAllUser is failed, user is not found.",
+				Message: "SearchUserCase FindManyUser is failed, user is not found.",
 				Data:    nil,
 			}
 			return err
@@ -49,7 +49,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *response.Response[[]*
 		err = begin.Commit()
 		result = &response.Response[[]*entity.User]{
 			Code:    http.StatusOK,
-			Message: "SearchUserCase FindAllUser is succeed.",
+			Message: "SearchUserCase FindManyUser is succeed.",
 			Data:    foundAllUser,
 		}
 		return err
@@ -58,7 +58,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *response.Response[[]*
 	if beginErr != nil {
 		result = &response.Response[[]*entity.User]{
 			Code:    http.StatusInternalServerError,
-			Message: "SearchUserCase FindAllUser  is failed, " + beginErr.Error(),
+			Message: "SearchUserCase FindManyUser  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}
@@ -66,7 +66,7 @@ func (searchUseCase *SearchUseCase) FindAllUser() (result *response.Response[[]*
 	return result
 }
 
-func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *response.Response[[]*entity.Post]) {
+func (searchUseCase *SearchUseCase) FindManyPostByUserId(id string) (result *response.Response[[]*entity.Post]) {
 	beginErr := crdb.Execute(func() (err error) {
 		begin, err := searchUseCase.DatabaseConfig.CockroachdbDatabase.Connection.Begin()
 		if err != nil {
@@ -74,14 +74,14 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *resp
 			return err
 		}
 
-		foundAllPost, err := searchUseCase.SearchRepository.FindAllPostByUserId(begin, id)
+		foundAllPost, err := searchUseCase.SearchRepository.FindManyPostByUserId(begin, id)
 		if err != nil {
 			return err
 		}
 		if foundAllPost == nil {
 			result = &response.Response[[]*entity.Post]{
 				Code:    http.StatusNotFound,
-				Message: "SearchPostCase FindAllPostByUserId is failed, post is not found by user id.",
+				Message: "SearchPostCase FindManyPostByUserId is failed, post is not found by user id.",
 				Data:    nil,
 			}
 			return err
@@ -90,7 +90,7 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *resp
 		err = begin.Commit()
 		result = &response.Response[[]*entity.Post]{
 			Code:    http.StatusOK,
-			Message: "SearchPostCase FindAllPostByUserId is succeed",
+			Message: "SearchPostCase FindManyPostByUserId is succeed",
 			Data:    foundAllPost,
 		}
 		return err
@@ -99,7 +99,7 @@ func (searchUseCase *SearchUseCase) FindAllPostByUserId(id string) (result *resp
 	if beginErr != nil {
 		result = &response.Response[[]*entity.Post]{
 			Code:    http.StatusInternalServerError,
-			Message: "SearchPostCase FindAllPostByUserId  is failed, " + beginErr.Error(),
+			Message: "SearchPostCase FindManyPostByUserId  is failed, " + beginErr.Error(),
 			Data:    nil,
 		}
 	}

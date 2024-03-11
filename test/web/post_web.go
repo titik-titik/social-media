@@ -26,10 +26,10 @@ func NewPostWeb(test *testing.T) *PostWeb {
 }
 
 func (p *PostWeb) Start() {
-	p.Test.Run("FindByID", p.FindByID)
-	p.Test.Run("GetAll", p.GetAll)
-	p.Test.Run("UpdatePost", p.Update)
-	p.Test.Run("DeletePost", p.Delete)
+	p.Test.Run("PostWeb_FindByID_Succeed", p.FindByID)
+	p.Test.Run("PostWeb_GetAll_Succeed", p.GetAll)
+	p.Test.Run("PostWeb_Update_Succeed", p.Update)
+	p.Test.Run("PostWeb_Delete_Succeed", p.Delete)
 }
 
 func (p PostWeb) FindByID(t *testing.T) {
