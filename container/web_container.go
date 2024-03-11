@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"social-media/internal/config"
 	http_delivery "social-media/internal/delivery/http"
+	"social-media/internal/delivery/http/middleware"
 	"social-media/internal/delivery/http/route"
 	"social-media/internal/repository"
 	"social-media/internal/use_case"
@@ -48,10 +49,10 @@ func NewWebContainer() *WebContainer {
 	controllerContainer := NewControllerContainer(userController, authController)
 
 	router := mux.NewRouter()
-
-	userRoute := route.NewUserRoute(router, userController)
+	authMiddleware := middleware.NewAuthMiddleware(*sessionRepository, databaseConfig)
 	authRoute := route.NewAuthRoute(router, authController)
-	postRoute := route.NewPostRoute(router, postController)
+	userRoute := route.NewUserRoute(router, userController, authMiddleware)
+	postRoute := route.NewPostRoute(router, postController, authMiddleware)
 
 	rootRoute := route.NewRootRoute(
 		router,
