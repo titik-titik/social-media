@@ -29,21 +29,22 @@ func NewWebContainer() *WebContainer {
 
 	envConfig := config.NewEnvConfig()
 	databaseConfig := config.NewDatabaseConfig(envConfig)
+	logger := NewLogger(envConfig)
 
 	searchRepository := repository.NewSearchRepository()
 	userRepository := repository.NewUserRepository()
 	sessionRepository := repository.NewSessionRepository()
-	postRepository := repository.NewPostRepository()
+	postRepository := repository.NewPostRepository(logger)
 	repositoryContainer := NewRepositoryContainer(userRepository, sessionRepository, postRepository, searchRepository)
 
 	searchUseCase := use_case.NewSearchUseCase(databaseConfig, searchRepository)
 	userUseCase := use_case.NewUserUseCase(databaseConfig, userRepository)
 	authUseCase := use_case.NewAuthUseCase(databaseConfig, userRepository, sessionRepository)
-	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository)
+	postUseCase := use_case.NewPostUseCase(databaseConfig, postRepository, logger)
 	useCaseContainer := NewUseCaseContainer(userUseCase, authUseCase, searchUseCase)
 
 	userController := http_delivery.NewUserController(userUseCase)
-	postController := http_delivery.NewPostController(postUseCase)
+	postController := http_delivery.NewPostController(postUseCase, logger)
 	authController := http_delivery.NewAuthController(authUseCase)
 	controllerContainer := NewControllerContainer(userController, authController)
 

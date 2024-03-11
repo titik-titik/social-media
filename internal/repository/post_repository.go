@@ -4,14 +4,18 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/guregu/null"
+	"github.com/rs/zerolog"
 	"social-media/internal/entity"
 )
 
 type PostRepository struct {
+	Log *zerolog.Logger
 }
 
-func NewPostRepository() *PostRepository {
-	return &PostRepository{}
+func NewPostRepository(log *zerolog.Logger) *PostRepository {
+	return &PostRepository{
+		Log: log,
+	}
 }
 
 func (p *PostRepository) Create(db *sql.Tx, post *entity.Post) error {
