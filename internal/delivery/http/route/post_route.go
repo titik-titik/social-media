@@ -1,29 +1,24 @@
 package route
 
 import (
-	"social-media/internal/delivery/http"
-	"social-media/internal/delivery/http/middleware"
-
 	"github.com/gorilla/mux"
+	"social-media/internal/delivery/http"
 )
 
 type PostRoute struct {
 	Router         *mux.Router
 	PostController *http.PostController
-	Middleware     *middleware.AuthMiddleware
 }
 
-func NewPostRoute(router *mux.Router, postController *http.PostController, middleware *middleware.AuthMiddleware) *PostRoute {
+func NewPostRoute(router *mux.Router, postController *http.PostController) *PostRoute {
 	postRoute := &PostRoute{
 		Router:         router.PathPrefix("/posts").Subrouter(),
 		PostController: postController,
-		Middleware:     middleware,
 	}
 	return postRoute
 }
 
 func (postRoute *PostRoute) Register() {
-	postRoute.Router.Use(postRoute.Middleware.Middleware)
 	postRoute.Router.HandleFunc("/", postRoute.PostController.Get).Methods("GET")
 	postRoute.Router.HandleFunc("/{id}", postRoute.PostController.Find).Methods("GET")
 	postRoute.Router.HandleFunc("/", postRoute.PostController.Create).Methods("POST")

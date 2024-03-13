@@ -39,11 +39,11 @@ func DeserializeUserRows(rows *sql.Rows) []*entity.User {
 	return foundUsers
 }
 
-func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) (result *entity.User, err error) {
+func (userRepository *UserRepository) FindOneById(tx *sql.Tx, id string) (result *entity.User, err error) {
 	var rows *sql.Rows
 	var queryErr error
 	_ = crdb.Execute(func() error {
-		rows, queryErr = begin.Query(
+		rows, queryErr = tx.Query(
 			`SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM "user" WHERE id=$1 LIMIT 1;`,
 			id,
 		)
@@ -67,8 +67,8 @@ func (userRepository *UserRepository) FindOneById(begin *sql.Tx, id string) (res
 	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByUsername(begin *sql.Tx, username string) (result *entity.User, err error) {
-	rows, queryErr := begin.Query(
+func (userRepository *UserRepository) FindOneByUsername(tx *sql.Tx, username string) (result *entity.User, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM "user" WHERE username=$1 LIMIT 1;`,
 		username,
 	)
@@ -90,8 +90,8 @@ func (userRepository *UserRepository) FindOneByUsername(begin *sql.Tx, username 
 	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByEmail(begin *sql.Tx, email string) (result *entity.User, err error) {
-	rows, queryErr := begin.Query(
+func (userRepository *UserRepository) FindOneByEmail(tx *sql.Tx, email string) (result *entity.User, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM "user" WHERE email=$1 LIMIT 1;`,
 		email,
 	)
@@ -113,8 +113,8 @@ func (userRepository *UserRepository) FindOneByEmail(begin *sql.Tx, email string
 	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByEmailAndPassword(begin *sql.Tx, email string, password string) (result *entity.User, err error) {
-	rows, queryErr := begin.Query(
+func (userRepository *UserRepository) FindOneByEmailAndPassword(tx *sql.Tx, email string, password string) (result *entity.User, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM "user" WHERE email=$1 AND password=$2 LIMIT 1;`,
 		email,
 		password,
@@ -137,8 +137,8 @@ func (userRepository *UserRepository) FindOneByEmailAndPassword(begin *sql.Tx, e
 	return result, err
 }
 
-func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin *sql.Tx, username string, password string) (result *entity.User, err error) {
-	rows, queryErr := begin.Query(
+func (userRepository *UserRepository) FindOneByUsernameAndPassword(tx *sql.Tx, username string, password string) (result *entity.User, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at FROM "user" WHERE username=$1 AND password=$2 LIMIT 1;`,
 		username,
 		password,
@@ -161,8 +161,8 @@ func (userRepository *UserRepository) FindOneByUsernameAndPassword(begin *sql.Tx
 	return result, err
 }
 
-func (userRepository *UserRepository) CreateOne(begin *sql.Tx, toCreateUser *entity.User) (result *entity.User, err error) {
-	_, queryErr := begin.Query(
+func (userRepository *UserRepository) CreateOne(tx *sql.Tx, toCreateUser *entity.User) (result *entity.User, err error) {
+	_, queryErr := tx.Query(
 		`INSERT INTO "user" (id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`,
 		toCreateUser.Id,
 		toCreateUser.Name,
@@ -187,8 +187,8 @@ func (userRepository *UserRepository) CreateOne(begin *sql.Tx, toCreateUser *ent
 	return result, err
 }
 
-func (userRepository *UserRepository) PatchOneById(begin *sql.Tx, id string, toPatchUser *entity.User) (result *entity.User, err error) {
-	_, queryErr := begin.Query(
+func (userRepository *UserRepository) PatchOneById(tx *sql.Tx, id string, toPatchUser *entity.User) (result *entity.User, err error) {
+	_, queryErr := tx.Query(
 		`UPDATE "user" SET id=$1, name=$2, username=$3, email=$4, password=$5, avatar_url=$6, bio=$7, is_verified=$8, created_at=$9, updated_at=$10, deleted_at=$11 WHERE id = $12 LIMIT 1;`,
 		toPatchUser.Id,
 		toPatchUser.Name,
@@ -215,8 +215,8 @@ func (userRepository *UserRepository) PatchOneById(begin *sql.Tx, id string, toP
 	return result, err
 }
 
-func (userRepository *UserRepository) DeleteOneById(begin *sql.Tx, id string) (result *entity.User, err error) {
-	rows, queryErr := begin.Query(
+func (userRepository *UserRepository) DeleteOneById(tx *sql.Tx, id string) (result *entity.User, err error) {
+	rows, queryErr := tx.Query(
 		`DELETE FROM "user" WHERE id=$1 LIMIT 1 RETURNING id, name, username, email, password, avatar_url, bio, is_verified, created_at, updated_at, deleted_at`,
 		id,
 	)

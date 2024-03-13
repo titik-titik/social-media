@@ -26,29 +26,34 @@ func (userController *UserController) FindOneById(writer http.ResponseWriter, re
 	vars := mux.Vars(reader)
 	id := vars["id"]
 
-	result := userController.UserUseCase.FindOneById(id)
-
-	response.NewResponse(writer, result)
+	ctx := reader.Context()
+	foundUser, foundUserErr := userController.UserUseCase.FindOneById(ctx, id)
+	if foundUserErr == nil {
+		response.NewResponse(writer, foundUser)
+	}
 }
 
 func (userController *UserController) FindOneByOneParam(writer http.ResponseWriter, reader *http.Request) {
 	email := reader.URL.Query().Get("email")
 	username := reader.URL.Query().Get("username")
 
+	ctx := reader.Context()
+	var foundUser *response.Response[*entity.User]
+	var foundUserErr error
 	if email != "" {
-		result := userController.UserUseCase.FindOneByEmail(email)
-		response.NewResponse(writer, result)
+		foundUser, foundUserErr = userController.UserUseCase.FindOneByEmail(ctx, email)
 	} else if username != "" {
-		result := userController.UserUseCase.FindOneByUsername(username)
-		response.NewResponse(writer, result)
+		foundUser, foundUserErr = userController.UserUseCase.FindOneByUsername(ctx, username)
 	} else {
-		result := &response.Response[*entity.User]{
+		foundUser = &response.Response[*entity.User]{
 			Message: "User parameter is invalid.",
 			Data:    nil,
 			Code:    http.StatusNotFound,
 		}
+	}
 
-		response.NewResponse(writer, result)
+	if foundUserErr == nil {
+		response.NewResponse(writer, foundUser)
 	}
 }
 
@@ -62,16 +67,20 @@ func (userController *UserController) PatchOneById(writer http.ResponseWriter, r
 		panic(decodeErr)
 	}
 
-	result := userController.UserUseCase.PatchOneByIdFromRequest(id, request)
-
-	response.NewResponse(writer, result)
+	ctx := reader.Context()
+	patchedUser, patchedUserErr := userController.UserUseCase.PatchOneByIdFromRequest(ctx, id, request)
+	if patchedUserErr == nil {
+		response.NewResponse(writer, patchedUser)
+	}
 }
 
 func (userController *UserController) DeleteOneById(writer http.ResponseWriter, reader *http.Request) {
 	vars := mux.Vars(reader)
 	id := vars["id"]
 
-	result := userController.UserUseCase.DeleteOneById(id)
-
-	response.NewResponse(writer, result)
+	ctx := reader.Context()
+	deletedUser, deletedUserErr := userController.UserUseCase.DeleteOneById(ctx, id)
+	if deletedUserErr == nil {
+		response.NewResponse(writer, deletedUser)
+	}
 }

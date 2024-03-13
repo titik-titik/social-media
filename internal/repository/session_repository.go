@@ -36,8 +36,8 @@ func DeserializeSessionRows(rows *sql.Rows) []*entity.Session {
 	return foundSessions
 }
 
-func (sessionRepository *SessionRepository) FindOneById(begin *sql.Tx, id string) (result *entity.Session, err error) {
-	rows, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) FindOneById(tx *sql.Tx, id string) (result *entity.Session, err error) {
+	rows, queryErr := tx.Query(
 		"SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM \"session\" WHERE id=$1 LIMIT 1;",
 		id,
 	)
@@ -59,8 +59,8 @@ func (sessionRepository *SessionRepository) FindOneById(begin *sql.Tx, id string
 	return result, err
 }
 
-func (sessionRepository *SessionRepository) FindOneByUserId(begin *sql.Tx, userId string) (result *entity.Session, err error) {
-	rows, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) FindOneByUserId(tx *sql.Tx, userId string) (result *entity.Session, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM "session" WHERE user_id=$1 LIMIT 1;`,
 		userId,
 	)
@@ -82,8 +82,8 @@ func (sessionRepository *SessionRepository) FindOneByUserId(begin *sql.Tx, userI
 	return result, err
 }
 
-func (sessionRepository *SessionRepository) CreateOne(begin *sql.Tx, toCreateSession *entity.Session) (result *entity.Session, err error) {
-	_, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) CreateOne(tx *sql.Tx, toCreateSession *entity.Session) (result *entity.Session, err error) {
+	_, queryErr := tx.Query(
 		`INSERT INTO "session" (id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
 		toCreateSession.Id,
 		toCreateSession.UserId,
@@ -106,8 +106,8 @@ func (sessionRepository *SessionRepository) CreateOne(begin *sql.Tx, toCreateSes
 	return result, err
 }
 
-func (sessionRepository *SessionRepository) PatchOneById(begin *sql.Tx, id string, toPatchSession *entity.Session) (result *entity.Session, err error) {
-	_, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) PatchOneById(tx *sql.Tx, id string, toPatchSession *entity.Session) (result *entity.Session, err error) {
+	_, queryErr := tx.Query(
 		`UPDATE "session" SET id=$1, user_id=$2, access_token=$3, refresh_token=$4, access_token_expired_at=$5, refresh_token_expired_at=$6, created_at=$7, updated_at=$8, deleted_at=$9 WHERE id=$10 LIMIT 1;`,
 		toPatchSession.Id,
 		toPatchSession.UserId,
@@ -131,8 +131,8 @@ func (sessionRepository *SessionRepository) PatchOneById(begin *sql.Tx, id strin
 	return result, err
 }
 
-func (sessionRepository *SessionRepository) DeleteOneById(begin *sql.Tx, id string) (result *entity.Session, err error) {
-	rows, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) DeleteOneById(tx *sql.Tx, id string) (result *entity.Session, err error) {
+	rows, queryErr := tx.Query(
 		`DELETE FROM "session" WHERE id=$1 LIMIT 1 RETURNING id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at;`,
 		id,
 	)
@@ -153,8 +153,8 @@ func (sessionRepository *SessionRepository) DeleteOneById(begin *sql.Tx, id stri
 	err = nil
 	return result, err
 }
-func (sessionRepository *SessionRepository) FindOneByAccToken(begin *sql.Tx, accessToken string) (result *entity.Session, err error) {
-	rows, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) FindOneByAccToken(tx *sql.Tx, accessToken string) (result *entity.Session, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM "session" WHERE access_token=$1 LIMIT 1;`,
 		accessToken,
 	)
@@ -175,8 +175,8 @@ func (sessionRepository *SessionRepository) FindOneByAccToken(begin *sql.Tx, acc
 	err = nil
 	return result, err
 }
-func (sessionRepository *SessionRepository) FindOneByRefToken(begin *sql.Tx, refreshToken string) (result *entity.Session, err error) {
-	rows, queryErr := begin.Query(
+func (sessionRepository *SessionRepository) FindOneByRefToken(tx *sql.Tx, refreshToken string) (result *entity.Session, err error) {
+	rows, queryErr := tx.Query(
 		`SELECT id, user_id, access_token, refresh_token, access_token_expired_at, refresh_token_expired_at, created_at, updated_at, deleted_at FROM "session" WHERE refresh_token=$1 LIMIT 1;`,
 		refreshToken,
 	)

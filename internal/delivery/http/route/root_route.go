@@ -2,32 +2,34 @@ package route
 
 import (
 	"github.com/gorilla/mux"
+	"social-media/internal/delivery/http/middleware"
 )
 
 type RootRoute struct {
-	Router    *mux.Router
-	UserRoute *UserRoute
-	AuthRoute *AuthRoute
-	PostRoute *PostRoute
+	Router           *mux.Router
+	RootMiddleware   *middleware.RootMiddleware
+	ProtectedRoute   *ProtectedRoute
+	UnprotectedRoute *UnprotectedRoute
 }
 
 func NewRootRoute(
 	router *mux.Router,
-	userRoute *UserRoute,
-	authRoute *AuthRoute,
-	postRoute *PostRoute,
+	rootMiddleware *middleware.RootMiddleware,
+	protectedRoute *ProtectedRoute,
+	unprotectedRoute *UnprotectedRoute,
 ) *RootRoute {
 	rootRoute := &RootRoute{
-		Router:    router,
-		UserRoute: userRoute,
-		AuthRoute: authRoute,
-		PostRoute: postRoute,
+		Router:           router,
+		RootMiddleware:   rootMiddleware,
+		ProtectedRoute:   protectedRoute,
+		UnprotectedRoute: unprotectedRoute,
 	}
 	return rootRoute
 }
 
 func (rootRoute *RootRoute) Register() {
-	rootRoute.UserRoute.Register()
-	rootRoute.AuthRoute.Register()
-	rootRoute.PostRoute.Register()
+	rootRoute.Router.Use(rootRoute.RootMiddleware.TransactionMiddleware.GetMiddleware)
+	rootRoute.UnprotectedRoute.Register()
+	rootRoute.ProtectedRoute.Router.Use(rootRoute.RootMiddleware.AuthMiddleware.GetMiddleware)
+	rootRoute.ProtectedRoute.Register()
 }

@@ -36,9 +36,11 @@ func (p *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := p.PostUseCase.Create(req)
-
-	response.NewResponse(w, result)
+	ctx := r.Context()
+	createdPost, createdPostErr := p.PostUseCase.Create(ctx, req)
+	if createdPostErr == nil {
+		response.NewResponse(w, createdPost)
+	}
 }
 
 func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
@@ -52,9 +54,11 @@ func (p *PostController) Find(w http.ResponseWriter, r *http.Request) {
 
 	req.PostId = null.NewString(postId, true)
 
-	result := p.PostUseCase.Find(req)
-
-	response.NewResponse(w, result)
+	ctx := r.Context()
+	foundPost, foundPostErr := p.PostUseCase.Find(ctx, req)
+	if foundPostErr == nil {
+		response.NewResponse(w, foundPost)
+	}
 }
 
 func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
@@ -68,9 +72,11 @@ func (p *PostController) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := p.PostUseCase.Get(req)
-
-	response.NewResponse(w, result)
+	ctx := r.Context()
+	foundPosts, foundPostsErr := p.PostUseCase.Get(ctx, req)
+	if foundPostsErr == nil {
+		response.NewResponse(w, foundPosts)
+	}
 }
 
 func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
@@ -93,9 +99,11 @@ func (p PostController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := p.PostUseCase.Update(req)
-
-	response.NewResponse(w, result)
+	ctx := r.Context()
+	updatedPost, updatedPostErr := p.PostUseCase.Update(ctx, req)
+	if updatedPostErr == nil {
+		response.NewResponse(w, updatedPost)
+	}
 }
 
 func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +117,9 @@ func (p PostController) Delete(w http.ResponseWriter, r *http.Request) {
 
 	req.ID = postId
 
-	result := p.PostUseCase.Delete(req)
-
-	response.NewResponse(w, result)
+	ctx := r.Context()
+	deletedPost, deletedPostErr := p.PostUseCase.Delete(ctx, req)
+	if deletedPostErr == nil {
+		response.NewResponse(w, deletedPost)
+	}
 }

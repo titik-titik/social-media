@@ -19,6 +19,7 @@ type WebContainer struct {
 	Repository *RepositoryContainer
 	UseCase    *UseCaseContainer
 	Controller *ControllerContainer
+	Middleware *middleware.RootMiddleware
 	Route      *route.RootRoute
 }
 
@@ -48,17 +49,21 @@ func NewWebContainer() *WebContainer {
 	authController := http_delivery.NewAuthController(authUseCase)
 	controllerContainer := NewControllerContainer(userController, authController)
 
-	router := mux.NewRouter()
+	transactionMiddleware := middleware.NewTransactionMiddleware(databaseConfig)
 	authMiddleware := middleware.NewAuthMiddleware(*sessionRepository, databaseConfig)
-	authRoute := route.NewAuthRoute(router, authController)
-	userRoute := route.NewUserRoute(router, userController, authMiddleware)
-	postRoute := route.NewPostRoute(router, postController, authMiddleware)
+	rootMiddleware := middleware.NewRootMiddleware(transactionMiddleware, authMiddleware)
 
+	router := mux.NewRouter()
+	authRoute := route.NewAuthRoute(router, authController)
+	userRoute := route.NewUserRoute(router, userController)
+	postRoute := route.NewPostRoute(router, postController)
+	protectedRoute := route.NewProtectedRoute(router, userRoute, postRoute)
+	unprotectedRoute := route.NewUnprotectedRoute(router, authRoute)
 	rootRoute := route.NewRootRoute(
 		router,
-		userRoute,
-		authRoute,
-		postRoute,
+		rootMiddleware,
+		protectedRoute,
+		unprotectedRoute,
 	)
 
 	rootRoute.Register()
@@ -69,6 +74,7 @@ func NewWebContainer() *WebContainer {
 		Repository: repositoryContainer,
 		UseCase:    useCaseContainer,
 		Controller: controllerContainer,
+		Middleware: rootMiddleware,
 		Route:      rootRoute,
 	}
 
