@@ -35,7 +35,7 @@ start-local-env:
 
 # start all test
 start-test:
-	go test -v ./test/*
+	go test -v -count=1 ./test
 
 start-test-env:
 	 GATEWAY_HOST=127.0.0.1 GATEWAY_APP_PORT=8001 go test -v ./test/*
